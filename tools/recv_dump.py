@@ -1,0 +1,1 @@
+## script que roda no host linux, ouve a porta serial, recebe o stream de bytes e o reconstrói em um arquivo binário(a imagem do firmware)
