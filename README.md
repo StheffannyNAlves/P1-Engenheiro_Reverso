@@ -37,6 +37,7 @@ python3 tools/recv_dump.py --port /dev/ttyACM0 --out firmware.bin --size 2097152
 > Aquisição concluída.
 > SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 > Salvo em: firmware.bin                                                                                                          
+```
 
 ## 📋 Entregáveis do Projeto
 
