@@ -27,6 +27,9 @@ Nessa seção explico por que contornar o uso de SDK(Integridade e Cadeia de Cus
 2. **Ferramenta Host (`tools/recv_dump.py`):** Um script Python  que roda no Host Linux do investigador. Ele ouve a porta serial, recebe o *stream* de bytes e o reconstrói em um arquivo binário (a imagem do firmware).
 3. **Validação (`tools/verify_dump.py`):** Ao final da aquisição, o script host calcula o hash (SHA-256) da imagem recebida para validação de integridade.
 
+### Fluxo de operação
+Esse diagrama de fluxo mostra a interação entre o microcontrolador e o Host. O P1 é um sistema de duas partes: o Firmware de Aquisição(rodando no RP2040) e o Script de Análise(rodando no Host Linux). O firmware no Pico(main.c) atuará como "Alvo" e "Agente de Extração". O fluxo de dados depende de duas hierarquias Mestre-Escravo distintas.
+[!Fluxo de Operação](.../diagramap1.svg)
 ## Uso (Exemplo)
 
 ```bash
