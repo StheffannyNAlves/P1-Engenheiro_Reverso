@@ -37,4 +37,7 @@ void uart_putc(char data) // funcao de envio de bits
    
 
 
-void uart_init();
+void ssi_init(void)
+{
+   
+}
