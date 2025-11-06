@@ -35,7 +35,7 @@ Esse diagrama de fluxo mostra a interação entre o microcontrolador e o Host. O
 
 O objetivo do projeto é usar a Camada USB para comandar o RP2040 a executar uma extração forense de sua própria memória, utilizando a Camada SPI.
 
----
+
 
 ##### Hierarquia SPI Mestre-Escravo
 
@@ -49,7 +49,7 @@ Para uma aquisição forense, essa abstração não é aceitável, pois pode pul
 
 Nosso fluxo de operação, portanto, ignora o XIP e implementa o protocolo Mestre-Escravo manualmente.
 
----
+
 
 #### Fluxo de Aquisição (Passo a Passo)
 
