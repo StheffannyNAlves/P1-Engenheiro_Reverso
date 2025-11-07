@@ -94,4 +94,8 @@ void ssi_init(void)
 uint8_t ssi_read_byte(uint32_t address)
 {
 
+   SSI_DR0 = 0x0B;
+
+   // envio dos bytes
+   
 }
