@@ -5,7 +5,7 @@
 // endereços base
 #define RESETS_BASE (0x4000c000)
 #define UART0_BASE (0x40034000)
-#define IO_BANK0 *(uint32_t *) (0x40014000 + 0x0CC)
+#define IO_BANK0 0x40014000 
 #define SSIO_BASE (0x4003c000)
 
 // mapeamento dos registradores 
@@ -53,19 +53,20 @@ void uart_putc(char data) // funcao de envio de bits
 }
    
 
-
+// func de inicialização
 void ssi_init(void)
 {
+   // 1. sai do reset
    RESETS_RESET &= ~SSI0_RST_BIT;
    while (RESETS_RESET_DONE & SSI0_RST_BIT)
    {
 
    }   
    
-   SSI_CR1 &= ~SSI_EN_BIT; // SSI desabilitado
-
-
+   // 2.  Desabilita o SSI
+   SSI_CR1 &= ~SSI_EN_BIT; 
    
+   // 3. Configuração dos pinos
    GPIO6_CTRL = FUNC_SSI; // chip select(cs)
    GPIO7_CTRL = FUNC_SSI; // Serial Clock (SCLK)
 
@@ -74,8 +75,23 @@ void ssi_init(void)
    GPIO9_CTRL = FUNC_SSI; // Serial Data 1 (SD1)
    GPIO10_CTRL = FUNC_SSI; // Serial Data 2 (SD2)
    GPIO11_CTRL = FUNC_SSI; // Serial Data 3 (SD3)
+   
 
+   // 4. Protocolo
+   SSI_CR0 = (2 << 16) | 7; // configuração da unidade de medida e o clock, (2 << 16) é o divisor de clock SCKDV (Clock/2)
+   // 7 é o DFS (Data Frame Size) para 8 bits
 
+   // 5. Modo mestre/escravo
+   SSI_CR1 = 0; 
+   
+   // 6. Habilita
+   SSI_CR1 |= SSI_EN_BIT; 
 
    
+}
+
+// func que faz a aquisição da FLASH
+uint8_t ssi_read_byte(uint32_t address)
+{
+
 }
