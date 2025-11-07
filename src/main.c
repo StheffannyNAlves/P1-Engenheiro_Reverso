@@ -14,6 +14,10 @@
 #define RESETS_RESET *(uint32_t *) (RESETS_BASE + 0x00)
 #define RESETS_RESET_DONE *(uint32_t *) (RESETS_BASE + 0x08) // pra zerar o bit
 
+#define GPIO0_CTRL *(uint32_t *) (IO_BANK0 + 0x004) // Tx
+#define GPIO1_CTRL *(uint32_t *) (IO_BANK0 + 0x00c) // Rx
+
+
 
 #define CTRL_R0  *(uint32_t *) (XIP_SSI_BASE + 0x00) // control register 0, define o formato(clock, modo SPI)
 #define SSI_ENR  *(uint32_t *) (XIP_SSI_BASE + 0x08) // ctrl reg 1, habilita/desabilita o SSI para cada leitura
@@ -24,10 +28,8 @@
 #define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
 #define UART0_RST_BIT (1 << 22) 
 #define FUNC_UART0 (1 << 0)
-#define FUNC_SSI 5
-#define SSI0_RST_BIT (1<< 16) // mascara pra sair do reset
 #define SSI_EN_BIT (1 << 0)
-#define SR_TFNF (1 << 2) // transmit fifo not full, diz quando o buffer tá cheio
+#define SR_TFNF (1 << 2) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio
 #define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
 
 
@@ -44,7 +46,7 @@ void uart_putc(char data) // funcao de envio de bits
 }
    
 
-// funcao de inicialização
+// funcao de inicialização do SSI
 void ssi_init(void)
 {
    // 1. Desabilita o XIP
@@ -115,4 +117,42 @@ uint8_t ssi_read_byte(uint32_t address)
    
    return dado;
    
+}
+
+
+
+
+
+// inicializacao do uart
+void uart_init(void)
+{
+   RESETS_RESET &= ~UART0_RST_BIT;
+
+   while (RESETS_RESET_DONE & UART0_RST_BIT)
+   {
+      
+   }
+
+   GPIO0_CTRL = FUNC_UART0;
+   GPIO1_CTRL = FUNC_UART0;
+   
+
+   // baud rate e control register
+}
+
+
+
+
+
+int main(void)
+{
+
+  uart_init;
+
+
+
+
+
+
+
 }
