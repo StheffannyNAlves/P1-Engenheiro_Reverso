@@ -27,8 +27,8 @@
 #define FUNC_SSI 5
 #define SSI0_RST_BIT (1<< 16) // mascara pra sair do reset
 #define SSI_EN_BIT (1 << 0)
-
-
+#define SR_TFNF (1 << 2) // transmit fifo not full, diz quando o buffer tá cheio
+#define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
 
 
 void uart_putc(char data) // funcao de envio de bits
@@ -44,7 +44,7 @@ void uart_putc(char data) // funcao de envio de bits
 }
    
 
-// func de inicialização
+// funcao de inicialização
 void ssi_init(void)
 {
    // 1. Desabilita o XIP
@@ -63,9 +63,56 @@ void ssi_init(void)
 // func que faz a aquisição da FLASH
 uint8_t ssi_read_byte(uint32_t address)
 {
+   // envio do comando Fast Read
+   while ( !(SR & SR_TFNF) )
+   {
+      // espera TX
+   }
 
-   DR0 = 0x0B;
+   DR0 = 0x0B; // saiu, tem espaço
+   
+   while ( !(SR & SR_TFNF))
+   {
+      
 
-   // envio dos bytes
+   }
 
+   DR0 = (address >> 16) & 0xFF; // envia os bits 23-16(byte 1)
+   
+
+   while ( !(SR & SR_TFNF))
+   {
+      
+   }
+
+   DR0 = (address >> 8) & 0xFF; // envia os bits 15-8(byte 2)
+   
+   while ( !(SR & SR_TFNF))
+   {
+
+   }
+   DR0 = address & 0xFF; // envia os bits 7-0(byte 3)
+   
+   
+   
+   // 5. envia um "dummy byte"(byte ficticio)
+   while ( !(SR & SR_TFNF))
+   {
+      // espera TX
+   }
+
+   DR0 = 0x15;
+
+   // 6. Espera o dado de resposta chegar
+
+   while ( !(SR & SR_RFNE))
+   {
+      // espera RX
+   }   
+   
+   // 7. Lê o dado
+   uint8_t dado = DR0; // A FIFO me fornece um byte
+   
+   return dado;
+   
 }
