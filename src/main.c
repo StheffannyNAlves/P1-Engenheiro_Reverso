@@ -1,3 +1,6 @@
+// codigo em desenvolvimento, retomada pós provas.
+
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -8,14 +11,28 @@
 #define IO_BANK0 0x40014000 
 #define XIP_SSI_BASE (0x18000000)
 
-// mapeamento dos registradores 
-#define UART_FR *(uint32_t *) (UART0_BASE + 0x18) // Status
-#define UART_DR *(uint32_t *) (UART0_BASE + 0x00) // Dados
+// mapeamento dos registradores  de reset
 #define RESETS_RESET *(uint32_t *) (RESETS_BASE + 0x00)
 #define RESETS_RESET_DONE *(uint32_t *) (RESETS_BASE + 0x08) // pra zerar o bit
 
+
+// regs de UART
+#define UART_FR *(uint32_t *) (UART0_BASE + 0x18) // Status
+#define UART_DR *(uint32_t *) (UART0_BASE + 0x00) // Dados
+
+// mascaras UART
+
+
+
+
+
+
+
+
+
 #define GPIO0_CTRL *(uint32_t *) (IO_BANK0 + 0x004) // Tx
 #define GPIO1_CTRL *(uint32_t *) (IO_BANK0 + 0x00c) // Rx
+#define FUNC_UART0 2
 
 
 
@@ -27,7 +44,6 @@
 // Valores escritos nos registradores, mascaras
 #define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
 #define UART0_RST_BIT (1 << 22) 
-#define FUNC_UART0 (1 << 0)
 #define SSI_EN_BIT (1 << 0)
 #define SR_TFNF (1 << 2) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio
 #define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
@@ -52,8 +68,9 @@ void ssi_init(void)
    // 1. Desabilita o XIP
    SSI_ENR = 0; 
 
+
    // 2.  Configura o protocolo
-   CTRL_R0 = (2 << 16) | 7;
+   CTRL_R0 = (0 << 16) | 7;
  
    
    // 3. Habilita
@@ -129,7 +146,7 @@ void uart_init(void)
 {
    RESETS_RESET &= ~UART0_RST_BIT;
 
-   while (RESETS_RESET_DONE & UART0_RST_BIT)
+   while (!(RESETS_RESET_DONE & UART0_RST_BIT))
    {
       
    }
