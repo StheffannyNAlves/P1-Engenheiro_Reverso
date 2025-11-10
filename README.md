@@ -62,7 +62,7 @@ A escolha de uma abordagem "bare-metal" (sem SDK) não é somente um exercício 
 6.  **(Pico/Host) O Loop:** O Payload lê um bloco, envia; o Host recebe, envia ACK.
 
 
-#### 2. Protocolo de Transferência (Rascunho)
+### Protocolo de Transferência (Rascunho)
 
 Para garantir que nenhum dado seja perdido na UART, um protocolo de *handshake* é usado:
 
@@ -78,11 +78,11 @@ Para garantir que nenhum dado seja perdido na UART, um protocolo de *handshake* 
 
 
 
-### 3. Diagrama de Cadeia de Custódia(rascunho)
+###  Diagrama de Cadeia de Custódia(rascunho)
 
 `[Chip FLASH W25Q16]` -> `[Payload na SRAM]` -> `[UART/USB]` -> `[client.py]` -> `[firmware_dump.bin]` -> `[SHA-256]`
 
-### 4. Validação de Integridade 
+###  Validação de Integridade 
 
 A integridade da imagem adquirida (`firmware_dump.bin`) é validada pelo `client.py`[cite: 16], que calcula e exibe um hash **SHA-256** do arquivo final. Isso prova que a *transferência de dados* foi bem-sucedida e que o arquivo no host corresponde ao que o Payload enviou.
 
