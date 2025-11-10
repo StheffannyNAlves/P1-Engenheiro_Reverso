@@ -26,10 +26,108 @@ O objetivo forense é **assumir o controle manual** desse periférico `XIP_SSI` 
 
 Tentar desabilitar o XIP (`SSI_ENR = 0`) para assumir o controle manual resulta em um **travamento imediato**, pois o processador "serra o galho em que está sentado".
 
+### O Paradoxo do XIP: 
+A tentativa ingênua (e com bugs) de ler a FLASH, rodando da própria FLASH, se parece com isto. Este código, extraído da branch feature/p1-ssi-driver, falha e trava o processador:
+
+``` C
+
+// codigo a ser refatorado, ele tenta ler a FLASH, rodando na própria(Erro imperdoável).
+
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+// endereços base
+#define RESETS_BASE (0x4000c000)
+#define UART0_BASE (0x40034000)
+#define IO_BANK0 0x40014000 
+#define XIP_SSI_BASE (0x18000000)
+
+// mapeamento dos registradores  de reset
+#define RESETS_RESET *(volatile uint32_t *) (RESETS_BASE + 0x00)
+#define RESETS_RESET_DONE *(volatile uint32_t *) (RESETS_BASE + 0x08) // pra zerar o bit
+
+
+// regs de UART
+#define UART_FR *(volatile uint32_t *) (UART0_BASE + 0x18) // Status
+#define UART_DR *(volatile uint32_t *) (UART0_BASE + 0x00) // Dados
+
+// mascaras UART
+#define UART0_RST_BIT (1 << 22) 
+#define UART_RXFE_BIT (1 << 4) // isola o bit 4(Receive FIFO Empty)
+#define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
+
+
+
+
+
+
+
+
+#define GPIO0_CTRL *(volatile uint32_t *) (IO_BANK0 + 0x004) // Tx
+#define GPIO1_CTRL *(volatile uint32_t *) (IO_BANK0 + 0x00c) // Rx
+#define FUNC_UART0 2
+
+
+
+#define CTRL_R0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x00) // control register 0, define o formato(clock, modo SPI)
+#define SSI_ENR  *(volatile uint32_t *) (XIP_SSI_BASE + 0x08) // ctrl reg 1, habilita/desabilita o SSI para cada leitura
+#define DR0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x60) // data reg, envio e recebimento de dados da FLASH
+#define SR  *(volatile uint32_t *)  (XIP_SSI_BASE + 0X28)
+
+// Valores escritos nos registradores, mascaras
+#define SSI_EN_BIT (1 << 0)
+#define SR_TFNF (1 << 1) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio(verificar)
+#define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
+
+
+// ... (funções uart_putc, uart_getc, etc.) ...
+
+
+// funcao de inicialização do SSI(correção critica)
+void ssi_init(void)
+{
+   // 1. Desabilita o XIP
+   // >>> A LINHA DA MORTE <<<
+   // O processador está buscando esta instrução da FLASH (via XIP).
+   // Ao executar esta linha, ele desliga o hardware que
+   // buscaria a *próxima* instrução de código.
+   SSI_ENR = 0; 
+
+
+   // 2.  Configura o protocolo
+   CTRL_R0 = (0 << 16) | 7;
+ 
+   
+   // 3. Habilita
+   SSI_ENR |= SSI_EN_BIT; 
+
+   
+}
+
+// ... (funções de inicialização da uart, ssi_transfer_byte, etc.) ...
+
+
+// program principal
+int main(void)
+{
+  // O `boot2` nos chama (rodando da FLASH)
+  uart_init();
+  ssi_init(); // O processador trava aqui.
+
+  // ... O código nunca chega aqui ...
+  while(1);
+}
+
+```
+
+Este travamento é a justificação central para a arquitetura de "Loader + Payload" descrita na próxima seção.
 
 
 
 ## Arquitetura
+
 
 Para resolver o Paradoxo do XIP, a arquitetura é dividida em dois estágios:
 
