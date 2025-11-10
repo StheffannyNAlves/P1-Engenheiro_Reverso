@@ -21,7 +21,9 @@
 #define UART_DR *(volatile uint32_t *) (UART0_BASE + 0x00) // Dados
 
 // mascaras UART
-
+#define UART0_RST_BIT (1 << 22) 
+#define UART_RXFE_BIT (1 << 4) // isola o bit 4(Receive FIFO Empty)
+#define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
 
 
 
@@ -42,8 +44,6 @@
 #define SR  *(volatile uint32_t *)  (XIP_SSI_BASE + 0X28)
 
 // Valores escritos nos registradores, mascaras
-#define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
-#define UART0_RST_BIT (1 << 22) 
 #define SSI_EN_BIT (1 << 0)
 #define SR_TFNF (1 << 1) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio(verificar)
 #define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
@@ -59,6 +59,18 @@ void uart_putc(char data) // funcao de envio de bits
 
    UART_DR = data; // escreva o byte de dado diretamente no Data Register
 
+}
+
+
+void uart_getc(void)
+{
+   while (UART_FR & UART_RXFE_BIT) // 1. Enquanto a FIFO estiver vazia, espere
+   {
+
+   }
+  
+   // 2. Saiu tem dados, leia
+   return (char)UART_DR;
 }
    
 
@@ -78,6 +90,32 @@ void ssi_init(void)
 
    
 }
+
+
+
+
+
+
+// inicializacao do uart
+void uart_init(void)
+{
+   RESETS_RESET &= ~UART0_RST_BIT;
+
+   while (!(RESETS_RESET_DONE & UART0_RST_BIT))
+   {
+      
+   }
+
+   GPIO0_CTRL = FUNC_UART0;
+   GPIO1_CTRL = FUNC_UART0;
+   
+
+   // baud rate = clk do sistema//(16 * baud rate)
+}
+
+
+
+
 
 
 
@@ -104,7 +142,13 @@ static uint8_t ssi_transfer_byte(uint8_t data_out)
 
 
 
-// funcao que faz a aquisição da FLASH
+/**
+ * Lê um byte da memória Flash usando o comando Fast Read.
+ * Envia um byte e imediatamente lê um byte para manter as FIFOs TX e RX sincronizadas.
+ * 
+ * @param address O endereço de 24 bits para leitura
+ * @return O byte lido da memória Flash
+ */
 uint8_t ssi_read_byte(uint32_t address)
 {
    // 1. Envio do comando Fast Read
@@ -132,22 +176,7 @@ uint8_t ssi_read_byte(uint32_t address)
 
 
 
-// inicializacao do uart
-void uart_init(void)
-{
-   RESETS_RESET &= ~UART0_RST_BIT;
 
-   while (!(RESETS_RESET_DONE & UART0_RST_BIT))
-   {
-      
-   }
-
-   GPIO0_CTRL = FUNC_UART0;
-   GPIO1_CTRL = FUNC_UART0;
-   
-
-   // baud rate = clk do sistema/(16 * baud rate)
-}
 
 
 
