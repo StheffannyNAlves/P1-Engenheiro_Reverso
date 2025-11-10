@@ -27,7 +27,7 @@ O objetivo forense é **assumir o controle manual** desse periférico `XIP_SSI` 
 Tentar desabilitar o XIP (`SSI_ENR = 0`) para assumir o controle manual resulta em um **travamento imediato**, pois o processador "serra o galho em que está sentado".
 
 ### O Paradoxo do XIP: 
-A tentativa ingênua (e com bugs) de ler a FLASH, rodando da própria FLASH, se parece com isto. Este código, extraído da branch feature/p1-ssi-driver, falha e trava o processador:
+A tentativa ingênua (e com bugs) de ler a FLASH, rodando da própria FLASH, se parece com isto. Este código, extraído da branch antiga feature/p1-ssi-driver, falha e trava o processador:
 
 ``` C
 
