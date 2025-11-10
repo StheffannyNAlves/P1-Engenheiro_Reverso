@@ -125,13 +125,13 @@ static uint8_t ssi_transfer_byte(uint8_t data_out)
 {
    while (!(SR & SR_TFNF)) // espera ter espaço
    {
-      /* code */
+
    }
    DR0 = data_out; 
    
    while (!(SR & SR_TFNF)) // espera o byte de resposta chegar
    {
-      /* code */
+      
    }
 
    return (uint8_t)DR0;
