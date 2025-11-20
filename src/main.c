@@ -18,6 +18,18 @@
 // regs de UART
 #define UART_FR *(volatile uint32_t *) (UART0_BASE + 0x18) // Status
 #define UART_DR *(volatile uint32_t *) (UART0_BASE + 0x00) // Dados
+#define UART0_CR *(volatile uint32_t *) (UART0_BASE + 0x030) // Control Register
+#define UART0_IBRD *(volatile uint32_t *) (UART0_BASE + 0x024) // Integer Baud Rate Register
+#define UART0_FBRD *(volatile uint32_t *) (UART0_BASE + 0x028) //Fractional Baud Rate Register
+#define UART0LCR_H *(volatile uint32_t *) (UART0_BASE + 0x02c) // Line Control Register
+
+
+
+
+
+
+
+
 
 // mascaras UART
 #define UART0_RST_BIT (1 << 22) 
@@ -95,9 +107,10 @@ void ssi_init(void)
 // inicializacao do uart
 void uart_init(void)
 {
-   RESETS_RESET &= ~(UART0_RST_BIT | IO_BANK0);
+   RESETS_RESET &= ~(UART0_RST_BIT | IO_BANK0_RST_BIT | PADS_RST_BANK0); // tira todos do reset //
 
-   while (!(RESETS_RESET_DONE & UART0_RST_BIT))
+   uint32_t rst_mascara = (UART0_RST_BIT | IO_BANK0_RST_BIT);
+   while (!(RESETS_RESET_DONE & rst_mascara))
    {
       
    }
@@ -107,7 +120,34 @@ void uart_init(void)
    
 
    // baud rate = clk do sistema//(16 * baud rate)
+   const uint32_t clk_peri = 125000000;
+   const uint32_t baud_rate = 115200;
+
+   // calculo com arredendomento
+   const uint32_t div_v64 = ((clk_peri * 4) + (baud_rate / 2)) / baud_rate;
+   UART0_CR = 0;
+
+   // pontoo fixo
+   UART0_IBRD = div_v64 >> 6; 
+   UART0_FBRD = div_v64 & 0x3F;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
 
 
 
