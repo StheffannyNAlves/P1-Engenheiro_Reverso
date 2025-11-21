@@ -1,4 +1,4 @@
-// em desenvolvimento, o codigo vai rodar na SRAM invés da Flash.
+// em desenvolvimento. esse daqui prova que a comunicação uart funciona
 
 
 #include <stdint.h>
@@ -9,7 +9,7 @@
 #define RESETS_BASE (0x4000c000)
 #define UART0_BASE (0x40034000)
 #define IO_BANK0 0x40014000 
-#define XIP_SSI_BASE (0x18000000)
+// define XIP_SSI_BASE (0x18000000)
 
 // mapeamento dos registradores  de reset
 #define RESETS_RESET *(volatile uint32_t *) (RESETS_BASE + 0x00)
@@ -25,16 +25,10 @@
 
 
 
-
-
-
-
-
-
-// mascaras UART
+// mascaras 
 #define UART0_RST_BIT (1 << 22) 
 #define UART_RXFE_BIT (1 << 4) // isola o bit 4(Receive FIFO Empty)
-#define TXFF_RST_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
+#define TXFF_BIT (1 << 5) // isola o bit 5(buffer/FIFO já cheio)
 #define IO_BANK0_RST_BIT (1 << 5)
 #define PADS_RST_BANK0 ( 1 << 8) // controla a eletrica do pino
 
@@ -46,58 +40,19 @@
 
 
 
-#define CTRL_R0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x00) // control register 0, define o formato(clock, modo SPI)
-#define SSI_ENR  *(volatile uint32_t *) (XIP_SSI_BASE + 0x08) // ctrl reg 1, habilita/desabilita o SSI para cada leitura
-#define DR0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x60) // data reg, envio e recebimento de dados da FLASH
-#define SR  *(volatile uint32_t *)  (XIP_SSI_BASE + 0X28)
+// define CTRL_R0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x00) // control register 0, define o formato(clock, modo SPI)
+// define SSI_ENR  *(volatile uint32_t *) (XIP_SSI_BASE + 0x08) // ctrl reg 1, habilita/desabilita o SSI para cada leitura
+// define DR0  *(volatile uint32_t *) (XIP_SSI_BASE + 0x60) // data reg, envio e recebimento de dados da FLASH
+// define SR  *(volatile uint32_t *)  (XIP_SSI_BASE + 0X28)
 
 // Valores escritos nos registradores, mascaras
-#define SSI_EN_BIT (1 << 0)
-#define SR_TFNF (1 << 1) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio(verificar)
-#define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
+// define SSI_EN_BIT (1 << 0)
+//define SR_TFNF (1 << 1) // transmit fifo not full, diz quando a FIFO de TX  *não* tá cheio(verificar)
+// define SR_RFNE (1 << 3) // Receive FIFO not empty, diz quando o dado chegou
 
 
-void uart_putc(char data) // funcao de envio de bits
-{
-   // enquanto o bit 5 no flag register(UART_FR) for 1, espere
-   while (UART_FR & TXFF_RST_BIT)
-   {
-    // a cpu espera 
-   }
-
-   UART_DR = data; // escreva o byte de dado diretamente no Data Register
-
-}
-
-
-void uart_getc(void)
-{
-   while (UART_FR & UART_RXFE_BIT) // 1. Enquanto a FIFO estiver vazia, espere
-   {
-
-   }
-  
-   // 2. Saiu tem dados, leia
-   return (char)UART_DR;
-}
    
 
-// funcao de inicialização do SSI(correção critica)
-void ssi_init(void)
-{
-   // 1. Desabilita o XIP
-   SSI_ENR = 0; 
-
-
-   // 2.  Configura o protocolo
-   CTRL_R0 = (0 << 16) | 7;
- 
-   
-   // 3. Habilita
-   SSI_ENR |= SSI_EN_BIT; 
-
-   
-}
 
 
 
@@ -127,22 +82,20 @@ void uart_init(void)
    const uint32_t div_v64 = ((clk_peri * 4) + (baud_rate / 2)) / baud_rate;
    UART0_CR = 0;
 
+   //A ORDEM DE ESCRITA DESSES REGS IMPORTA
    // pontoo fixo
    UART0_IBRD = div_v64 >> 6; 
    UART0_FBRD = div_v64 & 0x3F;
 
 
+   // 8 bits de dados, FIFO habilitada
+   UART0LCR_H = (1 << 4) | (3 << 5);
 
 
 
 
-
-
-
-
-
-
-
+   // ativa UARTEN(0)- 1, TXE(8)- 256, RXE(9)- 512
+   UART0_CR = (1 << 0) | (1 << 8) | (1 << 9); // total= 769
 
 
 }
@@ -151,63 +104,17 @@ void uart_init(void)
 
 
 
-
-
-
-
-
-// func pra falar com o SPI
-static uint8_t ssi_transfer_byte(uint8_t data_out)
+void uart_putc(char data) // funcao de envio de bits
 {
-   while (!(SR & SR_TFNF)) // espera ter espaço
+   // enquanto o bit 5 no flag register(UART_FR) for 1, espere
+   while (UART_FR & TXFF_BIT)
    {
-
-   }
-   DR0 = data_out; 
-   
-   while (!(SR & SR_TFNF)) // espera o byte de resposta chegar
-   {
-      
+    // a cpu espera 
    }
 
-   return (uint8_t)DR0;
+   UART_DR = data; // escreva o byte de dado diretamente no Data Register
+
 }
-
-
-
-
-
-
-/**
- * Lê um byte da memória Flash usando o comando Fast Read.
- * Envia um byte e imediatamente lê um byte para manter as FIFOs TX e RX sincronizadas.
- * 
- * @param address O endereço de 24 bits para leitura
- * @return O byte lido da memória Flash
- */
-uint8_t ssi_read_byte(uint32_t address)
-{
-   // 1. Envio do comando Fast Read
-   ssi_transfer_byte(0x0B);
-   
-   // 2. Envia os bits 23-16(byte 1)
-   ssi_transfer_byte((address >> 16) & 0xFF); 
-   
-   // 3. Envia os bits 15-8(byte 2)
-   ssi_transfer_byte((address >> 8) & 0xFF); 
-   
-   
-   // 4. Envia os bits 7-0(byte 3)
-   ssi_transfer_byte(address & 0xFF); 
-
-   // 5. envia um "dummy byte"(byte ficticio)
-   ssi_transfer_byte(0x15);
-
-   // 6. Envia um byte nulo(pra gerar clock)
-   return ssi_transfer_byte(0x00);
-   
-}
-
 
 
 
@@ -221,11 +128,14 @@ uint8_t ssi_read_byte(uint32_t address)
 int main(void)
 {
 
-  // incompleto
+  uart_init();
+   
+  while (1)
+  {
+   uart_putc('L');
 
-
-
-
-
+   for (volatile int i = 0; i < 100000; i++ );
+  }
+  
 
 }
