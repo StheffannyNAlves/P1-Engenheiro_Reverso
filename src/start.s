@@ -1,4 +1,4 @@
-@ Assembler program inicialization uart
+@ Assembly program inicialization uart
 
 .cpu cortex-m0plus
 .thumb
@@ -16,7 +16,6 @@ __vectors:
 .type _reset_handler, %function
 _reset_handler:
     
-    /* Pula direto para a função main */
     bl      main
 
 hang:
