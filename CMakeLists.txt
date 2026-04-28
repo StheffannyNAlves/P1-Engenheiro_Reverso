@@ -27,6 +27,7 @@ add_executable(p1_forensic_probe ${FIRMWARE_SOURCES})
 
 target_include_directories(p1_forensic_probe PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/transport
 )
 
 target_link_libraries(p1_forensic_probe
@@ -34,9 +35,11 @@ target_link_libraries(p1_forensic_probe
     hardware_gpio
     hardware_watchdog
     pico_multicore
+    tinyusb_device
+    tinyusb_board
 )
 
-pico_enable_stdio_uart(p1_forensic_probe 0)
+pico_enable_stdio_uart(p1_forensic_probe 1)
 pico_enable_stdio_usb(p1_forensic_probe 0)
 
 pico_add_extra_outputs(p1_forensic_probe)
