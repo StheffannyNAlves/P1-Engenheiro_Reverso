@@ -61,6 +61,11 @@
 #define CFG_TUSB_DEBUG        0
 #endif
 
+// Define RHPORT mode for device
+#ifndef CFG_TUSB_RHPORT0_MODE
+#define CFG_TUSB_RHPORT0_MODE OPT_MODE_DEVICE
+#endif
+
 // Enable Device stack
 #define CFG_TUD_ENABLED       1
 

@@ -49,7 +49,7 @@ static tusb_desc_device_t const desc_device = {
 
     .idVendor           = USB_VID,
     .idProduct          = USB_PID,
-    .bcdDevice          = 0x0100, // versão do firmware, manter em sync com CMakeLists.txt
+    .bcdDevice          = 0x0100, // versão do firmware, manter em sync com CMakeLists.txtFirmware version, keep in sync with CMakeLists.txt
 
     .iManufacturer      = 0x01,
     .iProduct           = 0x02,
