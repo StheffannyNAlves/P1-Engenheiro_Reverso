@@ -12,9 +12,9 @@
 
 ## O que é este projeto
 
-O **P1** transforma um Raspberry Pi Pico (Sonda) em um extrator forense capaz de adquirir **2 MB de firmware em menos de 60 segundos**, com validação criptográfica SHA-256 e registro estruturado da sessão, sem depender de nenhuma ferramenta de debug convencional (CMSIS-DAP, OpenOCD, picotool).
+O **Dolos** transforma um Raspberry Pi Pico (Sonda) em um extrator forense capaz de adquirir **2 MB de firmware em menos de 60 segundos**, com validação criptográfica SHA-256 e registro estruturado da sessão, sem depender de nenhuma ferramenta de debug convencional (CMSIS-DAP, OpenOCD, picotool).
 
-O diferencial não está apenas em implementar SWD sem biblioteca pronta. Está em tratar a extração como uma **operação forense**: integridade verificável, política explícita de não-modificação do alvo e evidência auditável do processo.
+O diferencial não está apenas em implementar SWD sem biblioteca pronta. Está em tratar a extração como uma **"operação forense"**: integridade verificável, política explícita de não-modificação do alvo e evidência auditável do processo.
 
 ### Origem
 
@@ -76,10 +76,10 @@ O RP2040 tem PIO que poderia gerar o clock SWD com precisão de ciclo. A escolha
 `gpio_put()` faz leitura-modificação-escrita internamente. Uma interrupção do TinyUSB entre a leitura e a escrita corrompe o estado do pino silenciosamente. Os registradores `GPIO_OUT_SET`/`CLR` e `GPIO_OE_SET`/`CLR` do SIO são atômicos — uma escrita altera apenas os bits da máscara, sem janela para corrupção.
 
 **Por que TinyUSB (SDK) é aceitável para transporte mas não para SWD?**
-O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração — variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos. Ferramentas certas para contextos certos.
+O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos. Ferramentas certas para contextos certos.
 
 **Por que controlar o pino RUN do alvo?**
-Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo executar qualquer código — impedindo que o firmware do alvo reconfigure periféricos (incluindo QSPI) antes do acesso à flash estar preparado.
+Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo executar qualquer código, impedindo que o firmware do alvo reconfigure periféricos (incluindo QSPI) antes do acesso à flash estar preparado.
 
 ---
 
@@ -87,7 +87,7 @@ Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo 
 
 A ferramenta opera em modo **Safe-Read forçado por software**: após a inicialização do alvo, qualquer tentativa de escrita na flash resulta em `ST_ABORT`. O sistema é projetado para **observar sem modificar**.
 
-As únicas escritas no alvo são as necessárias para inicializar a interface QSPI — e ocorrem antes da ativação do Safe-Read. O dump é validado por SHA-256 e comparado com referência obtida via picotool oficial.
+As únicas escritas no alvo são as necessárias para inicializar a interface QSPI, e ocorrem antes da ativação do Safe-Read. O dump é validado por SHA-256 e comparado com referência obtida via picotool oficial.
 
 ---
 
