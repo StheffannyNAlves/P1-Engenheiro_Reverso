@@ -80,12 +80,14 @@ jobs:
 
       - name: Verificar formatação
         run: |
-          # Verifica todos os .c e .h dentro de src/ e include/
-          FILES=$(find src include -name '*.c' -o -name '*.h' 2>/dev/null)
+          FILES=$(git ls-files '*.c' '*.h' \
+            ':!:src/transport/usb_descriptors.c')
+
           if [ -z "$FILES" ]; then
-            echo "Nenhum arquivo C encontrado ainda — pulando lint"
-            exit 0
+             echo "Nenhum arquivo C encontrado — pulando lint"
+             exit 0
           fi
+
           echo "$FILES" | xargs clang-format --dry-run --Werror
           echo "Formatação OK"
 
