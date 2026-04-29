@@ -22,14 +22,14 @@ set(FIRMWARE_SOURCES
     src/transport/usb_descriptors.c
 )
 
-add_executable(p1_forensic_probe ${FIRMWARE_SOURCES})
+add_executable(dolos ${FIRMWARE_SOURCES})
 
-target_include_directories(p1_forensic_probe PRIVATE
+target_include_directories(dolos PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/transport
 )
 
-target_link_libraries(p1_forensic_probe
+target_link_libraries(dolos
     pico_stdlib
     hardware_gpio
     hardware_watchdog
@@ -38,7 +38,7 @@ target_link_libraries(p1_forensic_probe
     tinyusb_board
 )
 
-pico_enable_stdio_uart(p1_forensic_probe 1)
-pico_enable_stdio_usb(p1_forensic_probe 0)
+pico_enable_stdio_uart(dolos 1)
+pico_enable_stdio_usb(dolos 0)
 
-pico_add_extra_outputs(p1_forensic_probe)
+pico_add_extra_outputs(dolos)
