@@ -2,7 +2,7 @@
 #define USB_TRANSPORT_H // Guards
 
 #define PACKET_MAGIC 0xAA
-#define CMD_PING     0x01
+#define CMD_PING 0x01
 #define EXPECTED_LEN 4
 
 void transport_usb_init(void);

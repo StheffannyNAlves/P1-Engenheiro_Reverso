@@ -5,19 +5,17 @@
 // #include "hardware/gpio.h"
 // #include <stdio.h>
 
-
-
 // static void _configure_run_pin(void)
 // {
 //     gpio_init(PIN_TARGET_RUN);
 //     gpio_set_dir(PIN_TARGET_RUN, GPIO_OUT);
-//     gpio_put(PIN_TARGET_RUN, TARGET_IN_RESET);   
+//     gpio_put(PIN_TARGET_RUN, TARGET_IN_RESET);
 // }
 
 // static void _configure_swd_pins_passive(void)
 // {    gpio_init(PIN_SWCLK);
 //     gpio_set_dir(PIN_SWCLK, GPIO_OUT);
-//     gpio_put(PIN_SWCLK, 0); 
+//     gpio_put(PIN_SWCLK, 0);
 
 //     gpio_init(PIN_SWDIO);
 //     gpio_set_dir(PIN_SWDIO, GPIO_IN);
@@ -42,11 +40,9 @@
 
 //     stdio_init_all();
 
-    
 //     _configure_led();
 //     _configure_run_pin();
 //     // _configure_swd_pins_passive();
-
 
 //     sleep_ms(10);
 

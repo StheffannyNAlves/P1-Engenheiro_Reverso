@@ -1,25 +1,23 @@
 #ifndef PLATFORM_INIT_H
 #define PLATFORM_INIT_H
 
-#include <stdint.h>
 #include <stdbool.h>
-
-
+#include <stdint.h>
 
 /**
  * @brief Inicializa plataforma: Pico SDK, GPIOs, alvo em reset.
  * @return true se bem-sucedida, false se falhar
  */
 typedef enum {
-    ERR_NONE = 0,
-    CLOCK_FAIL,
-    RUN_FAIL,
-    LED_FAIL,
+  ERR_NONE = 0,
+  CLOCK_FAIL,
+  RUN_FAIL,
+  LED_FAIL,
 } dolos_fault_code_t;
 
 typedef struct {
-    dolos_fault_code_t code;
-    bool is_fatal;
+  dolos_fault_code_t code;
+  bool is_fatal;
 } dolos_fault_t;
 
 /** @brief Acende o LED onboard. */
