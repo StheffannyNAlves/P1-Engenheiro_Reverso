@@ -1,6 +1,7 @@
 // Initial firmware
 #include "pico/stdlib.h"
 #include "transport/usb_transport.h"
+#include "bsp/board.h"
 #include <stdbool.h>
 #include <stdint.h>
 
