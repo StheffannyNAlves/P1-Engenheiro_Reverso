@@ -1,6 +1,5 @@
 .vscode/
 .venv/
-lib/
 /build/
 *.elf
 *.uf2
