@@ -33,5 +33,6 @@ void transport_process_commands(
     }
 
     tud_cdc_write_flush(); // Ensures the response is sent to the host correctly
+    transport_usb_task();   
   }
 }
