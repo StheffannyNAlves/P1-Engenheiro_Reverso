@@ -25,6 +25,7 @@ void transport_process_commands(
 
       else {
         tud_cdc_write_str("C004\r\n"); // Invalid packet checksum
+        tud_cdc_read_flush();      
       }
     } else {
       tud_cdc_write_str("C001\r\n"); // Invalid command
