@@ -2,11 +2,17 @@
     "configurations": [
         {
             "name": "RP2040",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "cStandard": "gnu11",
             "cppStandard": "gnu++17",
-            "intelliSenseMode": "gcc-arm"
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/include"
+            ]
         }
     ],
     "version": 4

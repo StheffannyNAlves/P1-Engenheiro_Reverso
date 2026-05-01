@@ -133,7 +133,7 @@ cmake ..
 make -j$(nproc)
 ```
 
-Para flashar: segure BOOTSEL no Pico sonda, conecte o USB e copie `p1_forensic_probe.uf2` para o drive que aparecer.
+Para flashar: segure BOOTSEL no Pico sonda, conecte o USB e copie `dolos.uf2` para o drive que aparecer.
 
 ---
 
