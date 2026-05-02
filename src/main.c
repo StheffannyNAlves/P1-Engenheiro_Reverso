@@ -2,6 +2,7 @@
 #include "bsp/board.h"
 #include "pico/stdlib.h"
 #include "transport/usb_transport.h"
+#include "target/target_ctrl.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -18,6 +19,7 @@ void fsm_run() {
   case PLATAFORM_INIT:
     board_init();
     transport_usb_init();
+    target_ctrl_init();
     current_state = IDLE;
     break;
 
@@ -35,6 +37,6 @@ int main() {
 
     transport_usb_task();
   }
-
+  
   return 0;
 }

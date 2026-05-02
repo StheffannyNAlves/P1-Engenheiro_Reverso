@@ -18,6 +18,7 @@ add_compile_options(
 set(FIRMWARE_SOURCES
     src/main.c
     src/platform/platform_init.c
+    src/target/target_ctrl.c        
     src/transport/usb_transport.c
     src/transport/usb_descriptors.c
 )

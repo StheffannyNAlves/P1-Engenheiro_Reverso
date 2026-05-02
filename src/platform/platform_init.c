@@ -2,7 +2,7 @@
 // #include "platform/board_config.h"
 // #include "hardware/watchdog.h"
 // #include "pico/stdlib.h"
-// #include "hardware/gpio.h"
+#include "hardware/gpio.h"
 // #include <stdio.h>
 
 // static void _configure_run_pin(void)

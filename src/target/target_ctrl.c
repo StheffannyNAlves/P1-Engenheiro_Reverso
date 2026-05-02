@@ -1,7 +1,34 @@
+// Core 1
+// Responsável por dar feedback visual sobre o estado do alvo
+
 #include "target/target_ctrl.h"
+#include "platform/board_config.h"
+#include "hardware/gpio.h"
 
-void target_crtl_init(void);
 
-void target_reset_low(void);
+#define GPIO_OUT_SET    *(volatile uint32_t *)(SIO_BASE + 0x014)
+#define GPIO_OE_SET      *(volatile uint32_t *)(SIO_BASE + 0x024)
+#define GPIO_OUT_CLR     *(volatile uint32_t *)(SIO_BASE + 0x018)
 
-void target_reset_high(void);
+
+
+void target_ctrl_init(void){
+    GPIO_OE_SET = (1 << PIN_RUN | 1 << PIN_PROBE_LED | 1 << PIN_RST);
+    GPIO_OUT_CLR = (1 << PIN_RUN);
+    GPIO_OUT_SET = (1 << PIN_RST);
+    GPIO_OUT_CLR = (1 << PIN_PROBE_LED);
+
+}
+
+
+
+void target_reset_low(void){
+    GPIO_OUT_SET = (1 << PIN_RST);
+    GPIO_OUT_CLR = (1 << PIN_PROBE_LED);
+
+}
+
+void target_reset_high(void){
+    GPIO_OUT_CLR = (1 << PIN_RST);
+    GPIO_OUT_SET = (1 << PIN_PROBE_LED);
+}
