@@ -9,5 +9,4 @@ void target_ctrl_init(void);
 void target_reset_low(void);
 void target_reset_high(void);
 
-
 #endif

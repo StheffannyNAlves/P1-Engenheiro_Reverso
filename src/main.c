@@ -1,8 +1,8 @@
 // Initial firmware
 #include "bsp/board.h"
 #include "pico/stdlib.h"
-#include "transport/usb_transport.h"
 #include "target/target_ctrl.h"
+#include "transport/usb_transport.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -37,6 +37,6 @@ int main() {
 
     transport_usb_task();
   }
-  
+
   return 0;
 }
