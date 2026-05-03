@@ -24,7 +24,7 @@ Este projeto é continuação direta de uma fase de pesquisa onde o RP2040 foi c
 
 ---
 
-## Estado atual — Sprint 1
+## Estado atual — Fase 1
 
 O ambiente de build está configurado e a arquitetura do firmware está definida. O trabalho em andamento é a fundação da sonda: controle do pino RUN do alvo, USB CDC funcional e as primitivas físicas do protocolo SWD.
 
