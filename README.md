@@ -29,7 +29,7 @@ Este projeto é continuação direta de uma fase de pesquisa onde o RP2040 foi c
 O ambiente de build está configurado e a arquitetura do firmware está definida. O trabalho em andamento é a fundação da sonda: controle do pino RUN do alvo, USB CDC funcional e as primitivas físicas do protocolo SWD.
 
 - [x] Ambiente CMake + TinyUSB configurado
-- [x ] Kill switch: controle do pino RUN via registradores SIO diretos
+- [x] Kill switch: controle do pino RUN via registradores SIO diretos
 - [x] USB CDC echo: validação do pipeline PC ↔ Sonda
 - [ ] SWD PHY: `WriteBit`, `ReadBit`, `Turnaround`, `LineReset` — a validar no analisador lógico
 
