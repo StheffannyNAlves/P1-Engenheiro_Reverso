@@ -76,7 +76,7 @@ O RP2040 tem PIO que poderia gerar o clock SWD com precisão de ciclo. A escolha
 `gpio_put()` faz leitura-modificação-escrita internamente. Uma interrupção do TinyUSB entre a leitura e a escrita corrompe o estado do pino silenciosamente. Os registradores `GPIO_OUT_SET`/`CLR` e `GPIO_OE_SET`/`CLR` do SIO são atômicos,uma escrita altera apenas os bits da máscara.
 
 **Por que TinyUSB (SDK) é aceitável para transporte mas não para SWD?**
-O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos. 
+O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos.
 
 **Por que controlar o pino RUN do alvo?**
 Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo executar qualquer código, impedindo que o firmware do alvo reconfigure periféricos (incluindo QSPI) antes do acesso à flash estar preparado.
