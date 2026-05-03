@@ -29,8 +29,8 @@ Este projeto é continuação direta de uma fase de pesquisa onde o RP2040 foi c
 O ambiente de build está configurado e a arquitetura do firmware está definida. O trabalho em andamento é a fundação da sonda: controle do pino RUN do alvo, USB CDC funcional e as primitivas físicas do protocolo SWD.
 
 - [x] Ambiente CMake + TinyUSB configurado
-- [ ] Kill switch: controle do pino RUN via registradores SIO diretos
-- [ ] USB CDC echo: validação do pipeline PC ↔ Sonda
+- [x ] Kill switch: controle do pino RUN via registradores SIO diretos
+- [x] USB CDC echo: validação do pipeline PC ↔ Sonda
 - [ ] SWD PHY: `WriteBit`, `ReadBit`, `Turnaround`, `LineReset` — a validar no analisador lógico
 
 ---
@@ -73,10 +73,10 @@ O projeto adota uma arquitetura híbrida onde cada camada tem uma justificativa 
 O RP2040 tem PIO que poderia gerar o clock SWD com precisão de ciclo. A escolha pelo bit-banging foi deliberada: o objetivo é controlar e auditar explicitamente cada bit do protocolo. PIO delegaria esse controle para microinstruções, correto para produção, opaco para fins forenses.
 
 **Por que registradores SIO diretos e não `gpio_put()`?**
-`gpio_put()` faz leitura-modificação-escrita internamente. Uma interrupção do TinyUSB entre a leitura e a escrita corrompe o estado do pino silenciosamente. Os registradores `GPIO_OUT_SET`/`CLR` e `GPIO_OE_SET`/`CLR` do SIO são atômicos — uma escrita altera apenas os bits da máscara, sem janela para corrupção.
+`gpio_put()` faz leitura-modificação-escrita internamente. Uma interrupção do TinyUSB entre a leitura e a escrita corrompe o estado do pino silenciosamente. Os registradores `GPIO_OUT_SET`/`CLR` e `GPIO_OE_SET`/`CLR` do SIO são atômicos,uma escrita altera apenas os bits da máscara.
 
 **Por que TinyUSB (SDK) é aceitável para transporte mas não para SWD?**
-O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos. Ferramentas certas para contextos certos.
+O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos. 
 
 **Por que controlar o pino RUN do alvo?**
 Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo executar qualquer código, impedindo que o firmware do alvo reconfigure periféricos (incluindo QSPI) antes do acesso à flash estar preparado.
