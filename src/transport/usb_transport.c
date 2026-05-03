@@ -1,4 +1,5 @@
 #include "transport/usb_transport.h"
+#include "target/target_ctrl.h"
 #include "tusb.h"
 
 void transport_usb_init(void) { tusb_init(); }
@@ -16,10 +17,24 @@ void transport_process_commands(
       uint8_t checksum = buffer[0] ^ buffer[1] ^ buffer[2];
 
       if (checksum == buffer[3]) {
-        if (buffer[1] == CMD_PING) {
+        switch (buffer[1]) {
+        case CMD_PING:
           tud_cdc_write_str("C000\r\n"); // Communication channel ready
-        } else {
+          break;
+
+        case CMD_HOLD:
+          target_reset_low();
+          tud_cdc_write_str("C000\r\n");
+          break;
+
+        case CMD_RELEASE:
+          target_reset_high();
+          tud_cdc_write_str("C000\r\n");
+          break;
+
+        default:
           tud_cdc_write_str("C003\r\n"); // Command not supported
+          break;
         }
       }
 

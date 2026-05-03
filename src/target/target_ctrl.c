@@ -1,4 +1,4 @@
-// Core 1
+// Core 0
 // Responsible for providing visual feedback on the target's status.
 #include "target/target_ctrl.h"
 #include "hardware/gpio.h"
@@ -9,6 +9,10 @@
 #define GPIO_OUT_CLR *(volatile uint32_t *)(SIO_BASE + 0x018)
 
 void target_ctrl_init(void) {
+  gpio_init(PIN_RUN);
+  gpio_init(PIN_RST);
+  gpio_init(PIN_PROBE_LED);
+
   GPIO_OE_SET = (1 << PIN_RUN | 1 << PIN_PROBE_LED | 1 << PIN_RST);
   GPIO_OUT_CLR = (1 << PIN_RUN);
   GPIO_OUT_SET = (1 << PIN_RST);
