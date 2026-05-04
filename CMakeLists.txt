@@ -40,6 +40,6 @@ target_link_libraries(dolos
 )
 
 pico_enable_stdio_uart(dolos 1)
-pico_enable_stdio_usb(dolos 0)
+pico_enable_stdio_usb(dolos 1)
 
 pico_add_extra_outputs(dolos)

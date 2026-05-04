@@ -6,6 +6,15 @@ void transport_usb_init(void) { tusb_init(); }
 
 void transport_usb_task(void) { tud_task(); }
 
+void transport_send_event(const uint8_t *buffer, uint32_t tamanho) {
+  tud_cdc_write(buffer, tamanho);
+  tud_cdc_write_flush();
+  transport_usb_task();
+}
+
+static bool watchdog_reset_flag = false;
+
+void transport_set_watchdog_flag(void) { watchdog_reset_flag = true; }
 void transport_process_commands(
     void) { // It only executes when the probe is ready to "listen," that is, in
             // the IDLE state
@@ -20,6 +29,11 @@ void transport_process_commands(
         switch (buffer[1]) {
         case CMD_PING:
           tud_cdc_write_str("C000\r\n"); // Communication channel ready
+          if (watchdog_reset_flag) {
+            transport_send_event((const uint8_t *)"F003\r\n", 6);
+            watchdog_reset_flag = false;
+          }
+
           break;
 
         case CMD_HOLD:
