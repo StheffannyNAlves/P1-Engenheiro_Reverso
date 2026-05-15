@@ -26,9 +26,9 @@ void platform_led_on(void);
 /** @brief Apaga o LED onboard. */
 void platform_led_off(void);
 
-/** @brief Pisca o LED n vezes (sinalização de estado/erro).
- *  @param n número de piscadas
- *  @param period_ms período em ms
+/** @brief Blinks the LED n times (status/error signaling).
+ *  @param n number of blinks
+ *  @param period_ms period in ms
  */
 void platform_led_blink(uint8_t n, uint32_t period_ms);
 

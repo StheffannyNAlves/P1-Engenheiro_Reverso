@@ -47,8 +47,7 @@ static tusb_desc_device_t const desc_device = {
     .idVendor = USB_VID,
     .idProduct = USB_PID,
     .bcdDevice =
-        0x0100, // versão do firmware, manter em sync com CMakeLists.txtFirmware
-                // version, keep in sync with CMakeLists.txt
+        0x0100, // Firmware version, keep in sync with CMakeLists.txt
 
     .iManufacturer = 0x01,
     .iProduct = 0x02,
@@ -89,12 +88,12 @@ enum { ITF_NUM_CDC = 0, ITF_NUM_CDC_DATA, ITF_NUM_TOTAL };
 
 #define CONFIG_TOTAL_LEN                                                       \
   (TUD_CONFIG_DESC_LEN +                                                       \
-   TUD_CDC_DESC_LEN) // O MSC foi intencionalmente removido
+   TUD_CDC_DESC_LEN) // MSC was intentionally removed
 
 static uint8_t const desc_fs_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(
         1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00,
-        100), // o 100 é o consumo máximo declarado ao host em mA
+        100), // 100 is the maximum consumption declared to the host in mA
 
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 16, EPNUM_CDC_OUT,
                        EPNUM_CDC_IN, 64),

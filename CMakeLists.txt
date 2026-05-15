@@ -29,6 +29,7 @@ add_executable(dolos ${FIRMWARE_SOURCES})
 
 target_include_directories(dolos PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/transport
 )
 
 target_link_libraries(dolos
