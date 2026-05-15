@@ -9,15 +9,15 @@
  * @return true se bem-sucedida, false se falhar
  */
 typedef enum {
-  ERR_NONE = 0,
-  CLOCK_FAIL,
-  RUN_FAIL,
-  LED_FAIL,
+    ERR_NONE = 0,
+    CLOCK_FAIL,
+    RUN_FAIL,
+    LED_FAIL,
 } dolos_fault_code_t;
 
 typedef struct {
-  dolos_fault_code_t code;
-  bool is_fatal;
+    dolos_fault_code_t code;
+    bool is_fatal;
 } dolos_fault_t;
 
 /** @brief Acende o LED onboard. */

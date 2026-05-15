@@ -15,8 +15,6 @@
 
 */
 
-
-
 #ifndef SWD_PHY_H
 #define SWD_PHY_H
 
@@ -25,7 +23,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /**
 * swd_phy_init()
@@ -38,8 +35,6 @@ extern "C" {
 
 */
 void swd_phy_init(void);
-
-
 
 /**
  * swd_write_bit(uint32_t bit)
@@ -57,7 +52,6 @@ void swd_phy_init(void);
  */
 void write_bit(uint32_t bit);
 
-
 /**
  * swd_write_byte(uint32_t byte)
  *
@@ -67,7 +61,6 @@ void write_bit(uint32_t bit);
  * @param byte  Byte to transmit (only bits [7:0] are used).
  */
 void write_byte(uint32_t byte);
-
 
 // Turnaround control
 /**
@@ -88,7 +81,6 @@ void swd_turnaround_host_to_target(void);
 void swd_turnaround_target_to_host(void);
 
 #ifdef __cplusplus
-
 }
 #endif
 

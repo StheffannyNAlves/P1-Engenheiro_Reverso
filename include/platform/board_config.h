@@ -1,8 +1,8 @@
 // Declares the macros that will be used, in addition to pin polarities
 
 #define PIN_TARGET_RUN 22
-#define PIN_SWCLK 2 
-#define PIN_SWDIO 3 
+#define PIN_SWCLK 2
+#define PIN_SWDIO 3
 #define PIN_PROBE_LED 25
 
 // polaridades
