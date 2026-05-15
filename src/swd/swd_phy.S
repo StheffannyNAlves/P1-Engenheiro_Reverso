@@ -2,7 +2,7 @@
    .cpu cortex-m0plus
    .thumb
 
-    #include "plataform/board_config.h"
+    #include "platform/board_config.h"
 
    .global writebit
    .type writebit, %function
