@@ -6,7 +6,7 @@
 ![Toolchain](https://img.shields.io/badge/Toolchain-arm--none--eabi--gcc_13.2-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-> Ferramenta de aquisição forense bare-metal que extrai e valida o conteúdo da memória Flash de um RP2040 alvo via protocolo SWD, usando outro RP2040 como sonda.
+> Ferramenta de aquisição bare-metal que extrai e valida o conteúdo da memória Flash de um RP2040 alvo via protocolo SWD, usando outro RP2040 como sonda.
 
 ---
 
@@ -31,7 +31,9 @@ O ambiente de build está configurado e a arquitetura do firmware está definida
 - [x] Ambiente CMake + TinyUSB configurado
 - [x] Kill switch: controle do pino RUN via registradores SIO diretos
 - [x] USB CDC echo: validação do pipeline PC ↔ Sonda
-- [ ] SWD PHY: `WriteBit`, `ReadBit`, `Turnaround`, `LineReset` — a validar no analisador lógico
+- [x] SWD PHY: Primitiva `writebit` determinística calibrada com NOPs (Core 1)
+- [x] SWD PHY: Sequência de inicialização física (`swd_phy_init`) integrada (Line Reset + JTAG-to-SWD)
+- [ ] SWD PHY: Implementação de `readbit` e chaveamento de `Turnaround`
 
 ---
 
@@ -39,55 +41,86 @@ O ambiente de build está configurado e a arquitetura do firmware está definida
 
 O projeto adota uma arquitetura híbrida onde cada camada tem uma justificativa técnica explícita.
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│                     SONDA (RP2040)                      │
-│                                                         │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │  SWD PHY    │  │  SWD Proto   │  │      DAP      │  │
-│  │  (Custom C) │→ │  (Custom C)  │→ │  (Custom C)   │  │
-│  │  bit-bang   │  │  pacotes/ACK │  │  reg. acesso  │  │
-│  └─────────────┘  └──────────────┘  └───────────────┘  │
-│           registradores SIO diretos (sem SDK)           │
-│                                             │           │
-│  ┌──────────────────────────────────────────▼────────┐  │
-│  │              FSM de Aquisição                     │  │
-│  │  BOOT → INIT → RESET → SWD → HALT → QSPI →       │  │
-│  │  EXTRACT → FINALIZE → DONE                        │  │
-│  └───────────────────────────┬───────────────────────┘  │
-│                              │                          │
-│  ┌───────────────────────────▼───────────────────────┐  │
-│  │           TinyUSB CDC  (Pico SDK)                 │  │
-│  └───────────────────────────┬───────────────────────┘  │
-└──────────────────────────────│──────────────────────────┘
-                               │ USB
-┌──────────────────────────────▼──────────────────────────┐
-│                   HOST (PC — Python)                    │
-│         receiver.py → dump.bin → SHA-256 → PDF          │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    %% Estilização e formas semânticas para arquitetura multicore
+
+    subgraph SONDA["Sonda RP2040 (Projeto Dolos)"]
+        direction LR
+
+        subgraph CORE1["⚡ CORE 1 (Domínio Crítico / Tempo Real)"]
+            direction TB
+            PHY{{"SWD PHY<br>(Assembly ARM)"}}
+            PROT["Protocolo SWD / DAP<br>(C Bare-metal)"]
+
+            PHY ==>|Timing determinístico| PROT
+        end
+
+        subgraph CORE0["CORE 0 (Domínio de I/O e Logs)"]
+            direction TB
+            BUF[/"Buffer Circular<br>de Logs em RAM"\]
+            USB{{"TinyUSB CDC<br>(Pico SDK)"}}
+
+            BUF -.->|Consumo Assíncrono| USB
+        end
+
+        SRAM[("SRAM Compartilhada<br>(FIFO HW)")]
+
+        %% Conexões internas de sincronização
+        PROT ===|Push de Ponteiros| SRAM
+        SRAM ===|Pull de Ponteiros| BUF
+    end
+
+    ALVO["Alvo (RP2040)<br>Flash ROM / QSPI"]
+    HOST["Host (PC - Python)<br>FSM Espelhada / PDF"]
+
+    %% Conexões externas
+    PROT ===|Barramento SWD| ALVO
+    USB <==>|Transporte USB CDC| HOST
+
+    %% Definição de Classes (Paleta Tech/Hardware)
+    classDef sonda fill:#1E293B,stroke:#475569,stroke-width:2px,color:#F8FAFC,rx:10,ry:10
+    classDef core1 fill:#450A0A,stroke:#EF4444,stroke-width:2px,color:#FECACA,stroke-dasharray: 5 5
+    classDef core0 fill:#082F49,stroke:#0EA5E9,stroke-width:2px,color:#BAE6FD,stroke-dasharray: 5 5
+    classDef nodeCrit fill:#7F1D1D,stroke:#FCA5A5,stroke-width:1px,color:#FFF
+    classDef nodeIO fill:#0284C7,stroke:#7DD3FC,stroke-width:1px,color:#FFF
+    classDef mem fill:#4B5563,stroke:#D1D5DB,stroke-width:2px,color:#FFF
+    classDef ext fill:#111827,stroke:#10B981,stroke-width:2px,color:#FFF
+
+    class SONDA sonda
+    class CORE1 core1
+    class CORE0 core0
+    class PHY,PROT nodeCrit
+    class BUF,USB nodeIO
+    class SRAM mem
+    class ALVO,HOST ext
 ```
 
 ### Decisões de design
 
-**Por que bit-banging em C e não PIO?**
-O RP2040 tem PIO que poderia gerar o clock SWD com precisão de ciclo. A escolha pelo bit-banging foi deliberada: o objetivo é controlar e auditar explicitamente cada bit do protocolo. PIO delegaria esse controle para microinstruções, correto para produção, opaco para fins forenses.
-
-**Por que registradores SIO diretos e não `gpio_put()`?**
-`gpio_put()` faz leitura-modificação-escrita internamente. Uma interrupção do TinyUSB entre a leitura e a escrita corrompe o estado do pino silenciosamente. Os registradores `GPIO_OUT_SET`/`CLR` e `GPIO_OE_SET`/`CLR` do SIO são atômicos,uma escrita altera apenas os bits da máscara.
-
-**Por que TinyUSB (SDK) é aceitável para transporte mas não para SWD?**
-O critério é: *o código afeta o timing do protocolo?* TinyUSB opera no transporte após a extração, variação de milissegundos não quebra nada. Nos pinos SWD o timing é medido em microssegundos.
-
-**Por que controlar o pino RUN do alvo?**
-Conexão sob reset garante que a sonda estabelece a sessão SWD antes de o alvo executar qualquer código, impedindo que o firmware do alvo reconfigure periféricos (incluindo QSPI) antes do acesso à flash estar preparado.
+**Por que bit-banging em Assembly e não PIO ou C?**
+  O pino `SWDCLK` opera de forma simétrica com atrasos calculados ciclo a ciclo via `NOPs`. Implementar em C delegaria o timing ao compilador, gerando instabilidade. O PIO automatizaria o processo, mas a implementação em Assembly ARM puro garante o controle cirúrgico e o determinismo necessários para auditoria forense.
+**Por que isolamento multicore (Core 1 vs Core 0)?**
+  Rotinas de exibição ou stacks de comunicação (como TinyUSB) possuem latências imprevisíveis de milissegundos. No Core 1, o barramento roda com **zero interrupções** e acesso exclusivo aos pinos via bloco **SIO (Single-cycle IO)** conectado ao barramento IOPORT do Cortex-M0+, garantindo escritas atômicas e livres de jitter de crossbar.
+**Por que o pino RUN é controlado sob Reset?**
+  Ao segurar a linha `RUN` do alvo em LOW antes da inicialização, a sonda impede o processador alvo de executar código local malicioso ou de reconfigurar os registradores do subsistema QSPI, assumindo o controle do silício a partir de um estado virgem e previsível.
 
 ---
 
-## Política de integridade — Safe-Read
+## Robustez e Tratamento de Erros (LUT)
 
-A ferramenta opera em modo **Safe-Read forçado por software**: após a inicialização do alvo, qualquer tentativa de escrita na flash resulta em `ST_ABORT`. O sistema é projetado para **observar sem modificar**.
+O gerenciamento de falhas do sistema é centralizado em uma **Look-Up Table (LUT) estática** armazenada em Flash. Toda transição de erro na FSM passa obrigatoriamente pela função unificada `error_policy(code)`.
 
-As únicas escritas no alvo são as necessárias para inicializar a interface QSPI, e ocorrem antes da ativação do Safe-Read. O dump é validado por SHA-256 e comparado com referência obtida via picotool oficial.
+As falhas são categorizadas por severidade, disparando reações determinísticas imediatas:
+-`ACTION_RETRY`: Reexecução de operações (ex: colisões de `ACK_WAIT`).
+-`ACTION_ABORT`: Encerramento seguro da sessão preservando os dados coletados até o momento.
+-`ACTION_FATAL_HALT`: Paralisação imediata da sonda com liberação do pino `RUN` do alvo em HIGH (mecanismo de *Safety Net* contra travamentos).
+
+---
+
+## Política de integridade: Safe-Read
+
+A sonda opera sob um modelo de **Safe-Read forçado por software**. Após o handshake inicial e a configuração estrita do subsistema QSPI/XIP do alvo, o firmware bloqueia qualquer envio de payloads de escrita. Qualquer tentativa de desvio ou comando não autorizado aborta a sessão imediatamente (`ST_ABORT`), invalidando o token de sessão criptográfico gerado no boot.
 
 ---
 
@@ -105,10 +138,10 @@ As únicas escritas no alvo são as necessárias para inicializar a interface QS
 
 | Sinal | GPIO Sonda | Componente | Pino Alvo | Função |
 | :------ | :---------- | :----------- | :---------- | :------- |
-| SWCLK | `GP2` | Fio direto | `SWCLK` | Clock SWD — sempre saída |
+| SWCLK | `GP2` | Fio direto | `SWCLK` | Clock SWD —> sempre saída |
 | SWDIO | `GP3` | Resistor **330 Ω** série | `SWDIO` | Dados bidirecionais |
 | RESET | `GP22` | Resistor **1 kΩ** série | `RUN` (pino 30) | Kill switch |
-| GND | `GND` | Fio direto | `GND` | Referência comum — obrigatório |
+| GND | `GND` | Fio direto | `GND` | Referência comum —> obrigatório |
 
 ---
 
