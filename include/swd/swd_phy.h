@@ -3,7 +3,7 @@
 
 * All functions in this layer access GPIO via SIO (0xD0000000),
 
-* with a guaranteed latency of 1 cycle 
+* with a guaranteed latency of 1 cycle
 
 * NEVER call these functions from Core 0.
 
@@ -56,15 +56,9 @@ void writebit(uint32_t bit);
  */
 // void write_byte(uint32_t byte);
 
-
-
 uint32_t readbit(void);
 
-
-
 void line_reset(void);
-
-
 
 // Turnaround control
 /**
