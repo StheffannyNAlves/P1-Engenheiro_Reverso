@@ -1,15 +1,9 @@
 /**
-
-* Physical Layer SWD
-
-* C interface for low-level routines implemented in
-* ARM Cortex-M0+ assembly (swd_phy.S).
-
 * DOMAIN: Exclusive Core 1.
 
 * All functions in this layer access GPIO via SIO (0xD0000000),
 
-* with a guaranteed latency of 1 cycle (RP2040 Datasheet §2.3.1).
+* with a guaranteed latency of 1 cycle 
 
 * NEVER call these functions from Core 0.
 
@@ -50,7 +44,7 @@ void swd_phy_init(void);
  * Target frequency: 1 MHz @ 125 MHz sysclk.
  * Calibrate NOP_HALF_HIGH / NOP_HALF_LOW in swd_phy.S with oscilloscope.
  */
-void write_bit(uint32_t bit);
+void writebit(uint32_t bit);
 
 /**
  * swd_write_byte(uint32_t byte)
@@ -60,7 +54,17 @@ void write_bit(uint32_t bit);
  *
  * @param byte  Byte to transmit (only bits [7:0] are used).
  */
-void write_byte(uint32_t byte);
+// void write_byte(uint32_t byte);
+
+
+
+uint32_t readbit(void);
+
+
+
+void line_reset(void);
+
+
 
 // Turnaround control
 /**
@@ -70,7 +74,7 @@ void write_byte(uint32_t byte);
  * Call BEFORE reading bits from target (e.g.: ACK phase, DATA phase in read).
  * (ADIv5 §B4.3.3 — default turnaround = 1 cycle)
  */
-void swd_turnaround_host_to_target(void);
+void turnaround_host_to_target(void);
 
 /**
  * swd_turnaround_target_to_host()
@@ -78,7 +82,7 @@ void swd_turnaround_host_to_target(void);
  * Generates 1 turnaround cycle and re-enables SWDIO as output.
  * Call AFTER the last bit read from target, before writing again.
  */
-void swd_turnaround_target_to_host(void);
+void turnaround_target_to_host(void);
 
 #ifdef __cplusplus
 }
