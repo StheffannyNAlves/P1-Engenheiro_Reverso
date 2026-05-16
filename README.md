@@ -24,7 +24,7 @@ Este projeto é continuação direta de uma fase de pesquisa onde o RP2040 foi c
 
 ---
 
-## Estado atual — Fase 1
+## Estado atual — Fase 2
 
 O ambiente de build está configurado e a arquitetura do firmware está definida. O trabalho em andamento é a fundação da sonda: controle do pino RUN do alvo, USB CDC funcional e as primitivas físicas do protocolo SWD.
 
@@ -33,7 +33,7 @@ O ambiente de build está configurado e a arquitetura do firmware está definida
 - [x] USB CDC echo: validação do pipeline PC ↔ Sonda
 - [x] SWD PHY: Primitiva `writebit` determinística calibrada com NOPs (Core 1)
 - [x] SWD PHY: Sequência de inicialização física (`swd_phy_init`) integrada (Line Reset + JTAG-to-SWD)
-- [ ] SWD PHY: Implementação de `readbit` e chaveamento de `Turnaround`
+- [x] SWD PHY: Implementação de `readbit` e chaveamento de `Turnaround`
 
 ---
 
