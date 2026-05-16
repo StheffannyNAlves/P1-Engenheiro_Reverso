@@ -40,12 +40,12 @@ Fundação da sonda validada: ambiente de build, firmware modular, USB CDC funci
 
 Implementação da camada física SWD em assembly ARM via SIO e início da camada de protocolo.
 
-- [x] `swd_phy_init` — inicialização de GPIO_OE e estado inicial dos pinos
-- [x] `writebit` — transmissão determinística de 1 bit via SIO, timing calibrado por NOPs
-- [x] `readbit` — leitura de 1 bit com chaveamento de direção via GPIO_OE
+- [x] `swd_phy_init`: inicialização de GPIO_OE e estado inicial dos pinos
+- [x] `writebit`: transmissão determinística de 1 bit via SIO, timing calibrado por NOPs
+- [x] `readbit`: leitura de 1 bit com chaveamento de direção via GPIO_OE
 - [x] `turnaround_host_to_target` e `turnaround_target_to_host`
-- [x] `line_reset` — 50 ciclos HIGH via loop assembly
-- [x] `swd_enter_swd_mode` — sequência completa: line_reset → 0xE79E → line_reset → idle cycles
+- [x] `line_reset`: 50 ciclos HIGH via loop assembly
+- [x] `swd_enter_swd_mode`: sequência completa: line_reset → 0xE79E → line_reset → idle cycles
 - [ ] Validação no analisador lógico
 - [ ] Leitura do IDCODE
 - [ ] Navegação DAP
