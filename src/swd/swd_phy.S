@@ -10,6 +10,7 @@
 
    .global readbit
    .type readbit, %function
+
    .global writebit
    .type writebit, %function
 
@@ -18,6 +19,9 @@
 
    .global turnaround_target_to_host
    .type turnaround_target_to_host, %function
+
+   .global line_reset
+   .type line_reset, %function
 
    .equ DOLOS_SIO_BASE,         0xD0000000
    .equ DOLOS_SIO_GPIO_IN,      0x004   @ read current pin state
@@ -178,6 +182,23 @@ turnaround_target_to_host:
 
     MOVS r5, #DOLOS_SIO_GPIO_OE_SET
     STR r2, [r1, r5]               @ SWDIO assumes responsibility
+
+    POP {r4, r5, pc}
+    .ltorg
+
+
+line_reset:
+    PUSH {r4, lr}
+
+    MOVS r4, #50
+    MOVS r5, #1
+
+line_reset_loop:
+    MOVS r0, #1
+    BL writebit @ Executes the clock cycle by sending the HIGH bit through the SIO
+
+    SUBS r4, r4, #1
+    BNE line_reset_loop
 
     POP {r4, r5, pc}
     .ltorg
