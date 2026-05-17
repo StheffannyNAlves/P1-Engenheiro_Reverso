@@ -24,16 +24,31 @@ Este projeto é continuação direta de uma fase de pesquisa onde o RP2040 foi c
 
 ---
 
-## Estado atual — Fase 2
+## Status
 
-O ambiente de build está configurado e a arquitetura do firmware está definida. O trabalho em andamento é a fundação da sonda: controle do pino RUN do alvo, USB CDC funcional e as primitivas físicas do protocolo SWD.
+### Fase 1 — Concluída
+
+Fundação da sonda validada: ambiente de build, firmware modular, USB CDC funcional e controle do alvo.
 
 - [x] Ambiente CMake + TinyUSB configurado
-- [x] Kill switch: controle do pino RUN via registradores SIO diretos
-- [x] USB CDC echo: validação do pipeline PC ↔ Sonda
-- [x] SWD PHY: Primitiva `writebit` determinística calibrada com NOPs (Core 1)
-- [x] SWD PHY: Sequência de inicialização física (`swd_phy_init`) integrada (Line Reset + JTAG-to-SWD)
-- [x] SWD PHY: Implementação de `readbit` e chaveamento de `Turnaround`
+- [x] Firmware inicial modular com FSM mínima (ST_BOOT → ST_IDLE)
+- [x] Controle do pino RUN do alvo via GPIO
+- [x] USB CDC enumerado e validado com echo PC ↔ Sonda
+- [x] Comandos básicos de controle recebidos e respondidos via USB
+
+### Fase 2 — Em andamento
+
+Implementação da camada física SWD em assembly ARM via SIO e início da camada de protocolo.
+
+- [x] `swd_phy_init` — inicialização de GPIO_OE e estado inicial dos pinos
+- [x] `writebit` — transmissão determinística de 1 bit via SIO, timing calibrado por NOPs
+- [x] `readbit` — leitura de 1 bit com chaveamento de direção via GPIO_OE
+- [x] `turnaround_host_to_target` e `turnaround_target_to_host`
+- [x] `line_reset` — 50 ciclos HIGH via loop assembly
+- [x] `swd_enter_swd_mode` — sequência completa: line_reset → 0xE79E → line_reset → idle cycles
+- [ ] Validação no analisador lógico
+- [ ] Leitura do IDCODE
+- [ ] Navegação DAP
 
 ---
 
