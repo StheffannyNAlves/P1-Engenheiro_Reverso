@@ -16,9 +16,8 @@ static bool watchdog_reset_flag = false;
 
 void transport_set_watchdog_flag(void) { watchdog_reset_flag = true; }
 
-transport_command_t
-transport_process_command(void) { // It only executes when the probe is ready to "listen,"
-                                  // that is, in the IDLE state
+transport_command_t transport_process_command(void) { // It only executes when the probe is ready to
+                                                      // "listen," that is, in the IDLE state
     if (tud_cdc_available() >= EXPECTED_LEN) {
         uint8_t buffer[EXPECTED_LEN];
         uint32_t count = tud_cdc_read(buffer, EXPECTED_LEN);
