@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 /**
- * @brief Inicializa plataforma: Pico SDK, GPIOs, alvo em reset.
- * @return true se bem-sucedida, false se falhar
+ * @brief Initialize platform: Pico SDK, GPIOs, target in reset.
+ * @return true if successful, false if failed
  */
 typedef enum {
     ERR_NONE = 0,
@@ -20,97 +20,97 @@ typedef struct {
     bool is_fatal;
 } dolos_fault_t;
 
-// Categoria B — Boot
+// Category B - Boot
 #define ERR_NONE 0x0000
-#define B001 0x0101 // Falha na configuração de clocks
-#define B002 0x0102 // Falha na inicialização de GPIO
-#define B003 0x0103 // Falha na inicialização do timer
-#define B004 0x0104 // Falha na alocação de buffers
+#define B001 0x0101 // Clock configuration failed
+#define B002 0x0102 // GPIO initialization failed
+#define B003 0x0103 // Timer initialization failed
+#define B004 0x0104 // Buffer allocation failed
 
-// Categoria S — SWD
-#define S000 0x0200 // Modo SWD ativado
-#define S001 0x0201 // Line reset falhou
-#define S002 0x0202 // Falha na sequência JTAG-to-SWD
-#define S003 0x0203 // Alvo não respondeu
-#define S004 0x0204 // IDCODE inválido
-#define S101 0x0211 // ACK WAIT persistente
+// Category S - SWD
+#define S000 0x0200 // SWD mode activated
+#define S001 0x0201 // Line reset failed
+#define S002 0x0202 // JTAG-to-SWD sequence failed
+#define S003 0x0203 // Target did not respond
+#define S004 0x0204 // Invalid IDCODE
+#define S101 0x0211 // Persistent ACK WAIT
 #define S102 0x0212 // ACK FAULT
-#define S103 0x0213 // ACK inválido
-#define S104 0x0214 // Erro de paridade
-#define S105 0x0215 // Timeout de transação
-#define S106 0x0216 // Falha de turnaround
-#define S107 0x0217 // Protocolo fora de sincronismo
+#define S103 0x0213 // Invalid ACK
+#define S104 0x0214 // Parity error
+#define S105 0x0215 // Transaction timeout
+#define S106 0x0216 // Turnaround failed
+#define S107 0x0217 // Protocol out of sync
 
-// Categoria F — Fatal
-#define F001 0x0901 // Assert interno
-#define F002 0x0902 // Estado inválido da FSM
-#define F003 0x0903 // Watchdog acionado
-#define F004 0x0904 // Corrupção de memória detectada
-#define F005 0x0905 // Falha irrecuperável
+// Category F - Fatal
+#define F001 0x0901 // Internal assert
+#define F002 0x0902 // Invalid FSM state
+#define F003 0x0903 // Watchdog triggered
+#define F004 0x0904 // Memory corruption detected
+#define F005 0x0905 // Unrecoverable failure
 
-// Categoria U — USB
-#define U000 0x0300 // USB inicializado
-#define U001 0x0301 // Controlador USB não inicializou
-#define U002 0x0302 // Enumeração falhou
-#define U003 0x0303 // Timeout de conexão com host
-#define U004 0x0304 // Endpoint não configurado
-#define U005 0x0305 // Erro de transmissão
-#define U006 0x0306 // Erro de recepção
+// Category U - USB
+#define U000 0x0300 // USB initialized
+#define U001 0x0301 // USB controller did not initialize
+#define U002 0x0302 // Enumeration failed
+#define U003 0x0303 // Host connection timeout
+#define U004 0x0304 // Endpoint not configured
+#define U005 0x0305 // Transmission error
+#define U006 0x0306 // Reception error
 
-// Categoria T — Controle do Alvo
-#define T000 0x0400 // Alvo em reset (RUN LOW)
-#define T001 0x0401 // Alvo liberado (RUN HIGH)
-#define T002 0x0402 // Halt da CPU executado
-#define T003 0x0403 // Halt falhou — CPU continua rodando
-#define T004 0x0404 // Reset pelo watchdog do alvo
+// Category T - Target Control
+#define T000 0x0400 // Target in reset (RUN LOW)
+#define T001 0x0401 // Target released (RUN HIGH)
+#define T002 0x0402 // CPU halt executed
+#define T003 0x0403 // Halt failed - CPU still running
+#define T004 0x0404 // Target watchdog reset
 
-// Categoria Q — QSPI/XIP
-#define Q000 0x0500 // QSPI/XIP inicializado
-#define Q001 0x0501 // Falha ao configurar registradores XIP
-#define Q002 0x0502 // Flash externa não respondeu
-#define Q003 0x0503 // Timeout na inicialização QSPI
+// Category Q - QSPI/XIP
+#define Q000 0x0500 // QSPI/XIP initialized
+#define Q001 0x0501 // Failed to configure XIP registers
+#define Q002 0x0502 // External flash did not respond
+#define Q003 0x0503 // QSPI initialization timeout
 
-// Categoria M — Memória
-#define M000 0x0600 // Leitura iniciada
-#define M001 0x0601 // Endereço inválido
-#define M002 0x0602 // Falha de leitura
-#define M003 0x0603 // Leitura fora da região permitida
-#define M004 0x0604 // Overflow de buffer (FATAL)
-#define M005 0x0605 // Tamanho de bloco inválido
+// Category M - Memory
+#define M000 0x0600 // Read started
+#define M001 0x0601 // Invalid address
+#define M002 0x0602 // Read failed
+#define M003 0x0603 // Read outside permitted region
+#define M004 0x0604 // Buffer overflow (FATAL)
+#define M005 0x0605 // Invalid block size
 
-// Categoria H — Hash/Integridade
-#define H000 0x0700 // Cálculo SHA-256 iniciado
-#define H001 0x0701 // Cálculo SHA-256 falhou
-#define H002 0x0702 // Hash inconsistente (FATAL)
-#define H003 0x0703 // Dados corrompidos (FATAL)
-#define H004 0x0704 // Checksum intermediário divergente
+// Category H - Hash/Integrity
+#define H000 0x0700 // SHA-256 calculation started
+#define H001 0x0701 // SHA-256 calculation failed
+#define H002 0x0702 // Hash mismatch (FATAL)
+#define H003 0x0703 // Data corrupted (FATAL)
+#define H004 0x0704 // Intermediate checksum divergent
 
-// Categoria C — Comunicação com Host
-#define C000 0x0800 // Canal de comunicação pronto
-#define C001 0x0801 // Comando inválido
-#define C002 0x0802 // Argumento inválido
-#define C003 0x0803 // Comando não suportado
-#define C004 0x0804 // Checksum de pacote inválido
-#define C005 0x0805 // Timeout de comando
+// Category C - Host Communication
+#define C000 0x0800 // Communication channel ready
+#define C001 0x0801 // Invalid command
+#define C002 0x0802 // Invalid argument
+#define C003 0x0803 // Unsupported command
+#define C004 0x0804 // Invalid packet checksum
+#define C005 0x0805 // Command timeout
 
-// Categoria I — Estados Operacionais
+// Category I - Operational States
 #define I000 0x0A00 // Idle
-#define I001 0x0A01 // Inicializando
-#define I002 0x0A02 // Aguardando host
-#define I003 0x0A03 // Conectando ao alvo
-#define I004 0x0A04 // Lendo IDCODE
-#define I005 0x0A05 // Extraindo firmware
-#define I006 0x0A06 // Calculando hash
-#define I007 0x0A07 // Enviando dados
-#define I008 0x0A08 // Concluído
+#define I001 0x0A01 // Initializing
+#define I002 0x0A02 // Awaiting host
+#define I003 0x0A03 // Connecting to target
+#define I004 0x0A04 // Reading IDCODE
+#define I005 0x0A05 // Extracting firmware
+#define I006 0x0A06 // Calculating hash
+#define I007 0x0A07 // Sending data
+#define I008 0x0A08 // Complete
 
-/** @brief Acende o LED onboard. */
+/** @brief Turn on onboard LED. */
 void platform_led_on(void);
 
-/** @brief Apaga o LED onboard. */
+/** @brief Turn off onboard LED. */
 void platform_led_off(void);
 
-/** @brief Blinks the LED n times (status/error signaling).
+/** @brief Blink the LED n times (status/error signaling).
  *  @param n number of blinks
  *  @param period_ms period in ms
  */
