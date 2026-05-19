@@ -23,7 +23,7 @@ dolos_fault_t app_read_idcode(uint32_t *idcode) {
         transport_send_event((const uint8_t *)"S004\r\n", 20);
         return (dolos_fault_t){.code = S004, .is_fatal = true};
     }
-    
+
     // Return value via pointer to caller
     *idcode = read_idcode;
 
