@@ -19,15 +19,11 @@ dolos_fault_t app_read_idcode(uint32_t *idcode) {
     uint32_t read_idcode = swd_read_idcode();
 
     // Validate read IDCODE (S004 - Invalid IDCODE)
-    if (read_idcode == 0xFFFFFFFF) {
-        transport_send_event((const uint8_t *)"S004_IDCODE_INVALID\r\n", 20);
+    if (read_idcode == 0xFFFFFFFF || read_idcode != 0x0BC12477) {
+        transport_send_event((const uint8_t *)"S004\r\n", 20);
         return (dolos_fault_t){.code = S004, .is_fatal = true};
     }
-    if (read_idcode != 0x0BC12477) {
-        transport_send_event((const uint8_t *)"S004\r\n", 6);
-        return (dolos_fault_t){.code = S004, .is_fatal = false};
-    }
-
+    
     // Return value via pointer to caller
     *idcode = read_idcode;
 
