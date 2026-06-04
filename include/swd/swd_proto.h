@@ -17,16 +17,16 @@ extern "C" {
 void swd_enter_swd_mode(void);
 
 /**
- *  @brief Inicializa e força a interface do alvo a entrar no modo SWD
- * Executa os reset's de linha e transmite a sequência de entrada no modo SWD (0xE79E) seguida por
- * mais um reset de linha e 2 ciclos ociosos. Após a execução desta função, o barramento estará
- * pronto para a primeira transação SWD.
+ *  @brief Initializes and forces the target interface to enter SWD mode.
+ * Executes the line resets and transmits the SWD entry sequence (0xE79E)
+ * followed by another line reset and 2 idle cycles. After this function
+ * completes, the bus will be ready for the first SWD transaction.
  */
 uint32_t swd_read(uint8_t apndp, uint8_t addr, uint8_t rnw);
 
 /**
- * @brief Lê o registrador de identificação (IDCODE) do alvo.
- * @return uint32_t IDCODE de 32 bits do chip conectado, ou 0xFFFFFFFF em caso de erro.
+ * @brief Reads the target identification register (IDCODE).
+ * @return uint32_t 32-bit IDCODE of the connected chip, or 0xFFFFFFFF on error.
  */
 uint32_t swd_read_idcode(void);
 

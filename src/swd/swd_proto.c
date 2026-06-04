@@ -2,6 +2,7 @@
 #include "swd/swd_proto.h"
 #include "swd/swd_phy.h"
 #include <stdint.h>
+#include <stdio.h>
 #define JTAG_TO_SWD_SEQ 0xE79E
 
 void swd_enter_swd_mode(void) {
@@ -10,7 +11,6 @@ void swd_enter_swd_mode(void) {
     uint16_t sequence = JTAG_TO_SWD_SEQ;
     for (int i = 0; i < 16; i++) {
         uint8_t bit = (sequence >> i) & 1;
-
         writebit(bit);
     }
 
@@ -30,7 +30,7 @@ static void send_request(uint8_t apndp, uint8_t rnw, uint8_t a2, uint8_t a3) {
 
     uint8_t parity = calculate_parity(apndp, rnw, a2, a3);
 
-    // Monta o byte empacotando cada bit em sua posição exata (LSB-first)
+    // Build the byte by packing each bit into its exact position (LSB-first)
     request_packet |= (1 << 0);      // bit 0: Start (sempre 1)
     request_packet |= (apndp << 1);  // bit 1: APnDP (0 para DP, 1 para AP)
     request_packet |= (rnw << 2);    // bit 2: RnW (0 para Escrita, 1 para Leitura)
@@ -71,7 +71,7 @@ static uint8_t calculate_data_parity(uint32_t data) {
 //        turnaround_target_to_host()
 // 5. retorna o valor de 32 bits lido
 uint32_t swd_read(uint8_t apndp, uint8_t addr, uint8_t rnw) {
-    send_request(apndp, rnw, (addr >> 1) & 1, (addr >> 2) & 1); // RnW = 1 for read
+    send_request(apndp, rnw, (addr >> 2) & 1, (addr >> 3) & 1); // RnW = 1 for read
 
     // Turnaround: Host to Target
     turnaround_host_to_target();
@@ -90,15 +90,17 @@ uint32_t swd_read(uint8_t apndp, uint8_t addr, uint8_t rnw) {
         turnaround_target_to_host();
 
         if (parity == calculate_data_parity(data)) {
+            printf("C000\n");
+            printf("IDCODE: 0x%08X\n", (unsigned int)data);
             return data; // Return the read data
         } else {
-            // Parity error handling (optional)
+            printf("S003\n");  // Parity error
             return 0xFFFFFFFF; // Indicate error with a special value
         }
     } else {
         turnaround_target_to_host(); // Ensure we return to host mode even on ACK error
-        // ACK error handling (optional)
-        return 0xFFFFFFFF; // Indicate error with a special value
+        printf("S004\n");            // ACK error
+        return 0xFFFFFFFF;           // Indicate error with a special value
     }
 }
 

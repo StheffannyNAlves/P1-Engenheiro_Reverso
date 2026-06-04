@@ -29,7 +29,7 @@ static void _configure_led(void) {
     gpio_put(PIN_PROBE_LED, LED_OFF);
 }
 
-static void _configure_watchdog(void) { watchdog_enable(1000, true); }
+// static void _configure_watchdog(void) { watchdog_enable(1000, true); }
 
 bool platform_init(void) {
 
@@ -37,7 +37,7 @@ bool platform_init(void) {
 
     _configure_led();
     _configure_run_pin();
-    // _configure_swd_pins_passive();
+    _configure_swd_pins_passive();
 
     sleep_ms(10);
 

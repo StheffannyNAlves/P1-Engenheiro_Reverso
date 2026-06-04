@@ -8,15 +8,9 @@
  * @brief Initialize platform: Pico SDK, GPIOs, target in reset.
  * @return true if successful, false if failed
  */
-typedef enum {
-    ERR_NONE = 0,
-    CLOCK_FAIL,
-    RUN_FAIL,
-    LED_FAIL,
-} dolos_fault_code_t;
 
 typedef struct {
-    dolos_fault_code_t code;
+    uint16_t code;
     bool is_fatal;
 } dolos_fault_t;
 
@@ -114,6 +108,13 @@ void platform_led_off(void);
  *  @param n number of blinks
  *  @param period_ms period in ms
  */
+bool platform_init(void);
+
 void platform_led_blink(uint8_t n, uint32_t period_ms);
+
+/**
+ * @brief Initialize platform: Pico SDK, GPIOs, target in reset.
+ * @return true if successful, false if failed
+ */
 
 #endif /* PLATFORM_INIT_H */

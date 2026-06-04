@@ -10,5 +10,8 @@ extern "C" {
 dolos_fault_t app_enter_swd(void);
 
 dolos_fault_t app_read_idcode(uint32_t *idcode);
+#ifdef __cplusplus
 }
+#endif 
+
 #endif // APP_H

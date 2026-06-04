@@ -33,25 +33,29 @@ transport_command_t transport_process_command(void) { // It only executes when t
                         transport_send_event((const uint8_t *)"F003\r\n", 6);
                         watchdog_reset_flag = false;
                     }
-
+                    tud_cdc_write_flush();
                     return CMD_NONE;
 
                 case CMD_START_SESSION:
                     tud_cdc_write_str("C000\r\n"); // Session started successfully
+                    tud_cdc_write_flush();
                     return CMD_START_SESSION;
 
                 case CMD_HOLD:
                     target_reset_low();
                     tud_cdc_write_str("C000\r\n");
+                    tud_cdc_write_flush();
                     return CMD_NONE;
 
                 case CMD_RELEASE:
                     target_reset_high();
                     tud_cdc_write_str("C000\r\n");
+                    tud_cdc_write_flush();
                     return CMD_NONE;
 
                 default:
                     tud_cdc_write_str("C003\r\n"); // Command not supported
+                    tud_cdc_write_flush();
                     return CMD_NONE;
                 }
             }

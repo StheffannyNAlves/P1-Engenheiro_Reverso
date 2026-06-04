@@ -35,13 +35,19 @@ swd_phy_init:
     PUSH {r4, r5, lr}
 
     LDR r1, =DOLOS_SIO_BASE
-    MOVS r2, #(1 << DOLOS_PIN_SWCLK)
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK) | (1 << DOLOS_PIN_SWDIO)
 
     MOVS r5, #0x24
     STR r2, [r1, r5]               @ SWCLK as output via GPIO_OE_SET
 
+    @ SWCLK in LOW
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK)
     MOVS r5, #0x18
     STR r2, [r1, r5]               @ Clear clock — SWCLK starts LOW
+
+    @  SWDIO in HIGH
+    MOVS r2, #(1 << DOLOS_PIN_SWDIO)
+    MOVS r5, #0x14      @ DOLOS_SIO_GPIO_OUT_SET
 
     POP {r4, r5, pc}
     .ltorg
@@ -76,10 +82,12 @@ writebit:
     MOVS r6, #DOLOS_SIO_GPIO_OUT_SET
     STR r2, [r1, r6]               @ SWCLK HIGH
 
-    @ 62 - 2 = 60 NOPs required for correct timing
-    .rept 60
+    .rept 59
         NOP
     .endr
+
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r2, [r1, r6]  @ Garante que o clock termine em LOW
 
     POP {r4, r5, r6, pc}           @ Clear registers and jump back to caller
     .ltorg
@@ -93,9 +101,9 @@ readbit:
 
     @ LOW half-cycle
     MOVS r5, #DOLOS_SIO_GPIO_OE_CLR
-    STR r3, [r1, r5]               @ SWDIO becomes input -> GPIO_OE_CLR with SWDIO mask
+    STR r3, [r1, r5]               @ SWDIO becomes input, GPIO_OE_CLR with SWDIO mask
 
-    @ 62 - 2(MOVS) - 1(STR) = 59 remaining cycles
+    @ Delay para o sinal subir 
     .rept 59
         NOP
     .endr
@@ -103,6 +111,12 @@ readbit:
     @ HIGH half-cycle
     MOVS r5, #DOLOS_SIO_GPIO_OUT_SET
     STR r2, [r1, r5]               @ SWCLK HIGH
+
+    @ Pausa elétrica
+    NOP
+    NOP
+    NOP
+    NOP
 
     MOVS r5, #DOLOS_SIO_GPIO_IN
     LDR r0, [r1, r5]               @ Read all pins
@@ -115,10 +129,11 @@ readbit:
     MOVS r5, #DOLOS_SIO_GPIO_OUT_CLR
     STR r2, [r1, r5]               @ SWCLK LOW
 
-    @ 62 - 4(MOVS) - 2(STR) - 1(LDR) - 1(LSRS) - 1(ANDS) = 53 NOPs required
-    .rept 53
+    @ 62 - 4(MOVS) - 2(STR) - 1(LDR) - 1(LSRS) - 1(ANDS) - 4 NOPs = 49 NOPs required
+    .rept 49
         NOP
     .endr
+
 
     POP {r4, r5, pc}
     .ltorg
@@ -191,7 +206,6 @@ line_reset:
     PUSH {r4, lr}
 
     MOVS r4, #50
-    MOVS r5, #1
 
 line_reset_loop:
     MOVS r0, #1
@@ -200,5 +214,5 @@ line_reset_loop:
     SUBS r4, r4, #1
     BNE line_reset_loop
 
-    POP {r4, r5, pc}
+    POP {r4, pc}
     .ltorg

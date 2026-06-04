@@ -23,6 +23,8 @@ set(FIRMWARE_SOURCES
     src/transport/usb_descriptors.c
     src/swd/swd_proto.c
     src/swd/swd_phy.S
+    src/app/app.c
+    src/display/lcd.c
 )
 
 add_executable(dolos ${FIRMWARE_SOURCES})
@@ -30,6 +32,7 @@ add_executable(dolos ${FIRMWARE_SOURCES})
 target_include_directories(dolos PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/transport
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/display
 )
 
 target_link_libraries(dolos
@@ -39,6 +42,7 @@ target_link_libraries(dolos
     pico_multicore
     tinyusb_device
     tinyusb_board
+    hardware_i2c
 )
 
 pico_enable_stdio_uart(dolos 1)
