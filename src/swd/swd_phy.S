@@ -1,218 +1,218 @@
-.syntax unified.cpu cortex - m0plus
-                                 .thumb
+.syntax unified
+   .cpu cortex-m0plus
+   .thumb
 
-                                 .set DOLOS_PIN_SWCLK,
-    2 .set DOLOS_PIN_SWDIO,
-    3
+   .set DOLOS_PIN_SWCLK, 2
+   .set DOLOS_PIN_SWDIO, 3
 
-        .global swd_phy_init.type swd_phy_init,
-    % function
+   .global swd_phy_init
+   .type swd_phy_init, %function
 
-            .global readbit.type readbit,
-    % function
+   .global readbit
+   .type readbit, %function
 
-            .global writebit.type writebit,
-    % function
+   .global writebit
+   .type writebit, %function
 
-            .global turnaround_host_to_target.type turnaround_host_to_target,
-    % function
+   .global turnaround_host_to_target
+   .type turnaround_host_to_target, %function
 
-            .global turnaround_target_to_host.type turnaround_target_to_host,
-    % function
+   .global turnaround_target_to_host
+   .type turnaround_target_to_host, %function
 
-            .global line_reset.type line_reset,
-    % function
+   .global line_reset
+   .type line_reset, %function
 
-            .equ DOLOS_SIO_BASE,
-    0xD0000000 .equ DOLOS_SIO_GPIO_IN, 0x004 @read current pin state.equ DOLOS_SIO_GPIO_OUT_SET,
-    0x014 @force specific pins HIGH.equ DOLOS_SIO_GPIO_OUT_CLR,
-    0x018 @force specific pins LOW.equ DOLOS_SIO_GPIO_OE_SET,
-    0x024 @enable output.equ DOLOS_SIO_GPIO_OE_CLR,
-    0x028 @disable output
+   .equ DOLOS_SIO_BASE,         0xD0000000
+   .equ DOLOS_SIO_GPIO_IN,      0x004   @ read current pin state
+   .equ DOLOS_SIO_GPIO_OUT_SET, 0x014   @ force specific pins HIGH
+   .equ DOLOS_SIO_GPIO_OUT_CLR, 0x018   @ force specific pins LOW
+   .equ DOLOS_SIO_GPIO_OE_SET,  0x024   @ enable output
+   .equ DOLOS_SIO_GPIO_OE_CLR,  0x028   @ disable output
 
-        swd_phy_init : PUSH{r4, r5, lr}
 
-                       LDR r1,
-                       = DOLOS_SIO_BASE MOVS r2,
-                       #(1 << DOLOS_PIN_SWCLK) | (1 << DOLOS_PIN_SWDIO)
+swd_phy_init:
+    PUSH {r4, r5, lr}
 
-                                                     MOVS r5,
-                       #0x24 STR r2,
-                       [ r1, r5 ] @SWCLK as output via GPIO_OE_SET
+    LDR r1, =DOLOS_SIO_BASE
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK) | (1 << DOLOS_PIN_SWDIO)
 
-                       @SWCLK in LOW MOVS r2,
-                       #(1 << DOLOS_PIN_SWCLK) MOVS r5,
-                       #0x18 STR r2,
-                       [ r1, r5 ] @Clear clock — SWCLK starts LOW
+    MOVS r5, #0x24
+    STR r2, [r1, r5]               @ SWCLK as output via GPIO_OE_SET
 
-                       @SWDIO in HIGH MOVS r2,
-                       #(1 << DOLOS_PIN_SWDIO) MOVS r5,
-                       #0x14 @DOLOS_SIO_GPIO_OUT_SET
+    @ SWCLK in LOW
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK)
+    MOVS r5, #0x18
+    STR r2, [r1, r5]               @ Clear clock — SWCLK starts LOW
 
-                       POP{r4, r5, pc}
-                           .ltorg
+    @  SWDIO in HIGH
+    MOVS r2, #(1 << DOLOS_PIN_SWDIO)
+    MOVS r5, #0x14      @ DOLOS_SIO_GPIO_OUT_SET
 
-                       writebit : PUSH {
-    r4, r5, r6, lr
-}
-@save registers
+    POP {r4, r5, pc}
+    .ltorg
 
-    LDR r1,
-    = 0xD0000000 MOVS r2, #(1 << DOLOS_PIN_SWCLK) MOVS r3,
-    #(1 << DOLOS_PIN_SWDIO)
+writebit:
+    PUSH {r4, r5, r6, lr}          @ save registers
 
-            @LOW half
-        - cycle MOVS r6,
-    #DOLOS_SIO_GPIO_OUT_CLR STR r2,
-    [ r1, r6 ] @SWCLK LOW
+    LDR r1, =0xD0000000
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK)
+    MOVS r3, #(1 << DOLOS_PIN_SWDIO)
 
-    LSLS r4,
-    r0, #DOLOS_PIN_SWDIO @If R0 = 1, R4 = 0x08. If R0 = 0, R4 = 0x00 SUBS r5, r3,
-                             r4 @If R4 = 0x08->R5 = 0x00 / If R4 = 0x00->R5 = 0x08
+    @ LOW half-cycle
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r2, [r1, r6]               @ SWCLK LOW
 
-                             MOVS r6,
-                             #DOLOS_SIO_GPIO_OUT_SET STR r4,
-                             [ r1, r6 ] @Apply data
+    LSLS r4, r0, #DOLOS_PIN_SWDIO  @ If R0=1, R4=0x08. If R0=0, R4=0x00
+    SUBS r5, r3, r4                 @ If R4=0x08 -> R5=0x00 / If R4=0x00 -> R5=0x08
 
-    MOVS r6,
-                             #DOLOS_SIO_GPIO_OUT_CLR STR r5,
-                             [ r1, r6 ] @Clear data
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_SET
+    STR r4, [r1, r6]               @ Apply data
 
-                                 @Cycle calculation : 1(LSLS) +
-                                 1(SUBS) + 3(STR) +
-                                 6(MOVS) = 11 cycles @62 - 11 = 51 NOPs required.rept 51 NOP.endr
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r5, [r1, r6]               @ Clear data
 
-                                                                @HIGH half
-                                                                - cycle MOVS r6,
-                             #DOLOS_SIO_GPIO_OUT_SET STR r2,
-                             [ r1, r6 ] @SWCLK HIGH
+    @ Cycle calculation: 1(LSLS) + 1(SUBS) + 3(STR) + 6(MOVS) = 11 cycles
+    @ 62 - 11 = 51 NOPs required
+    .rept 51
+        NOP
+    .endr
 
-                                 .rept 59 NOP.endr
+    @ HIGH half-cycle
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_SET
+    STR r2, [r1, r6]               @ SWCLK HIGH
 
-                             MOVS r6,
-                             #DOLOS_SIO_GPIO_OUT_CLR STR r2,
-                             [ r1, r6 ] @Garante que o clock termine em LOW
+    .rept 59
+        NOP
+    .endr
 
-    POP {
-    r4, r5, r6, pc
-}
-@Clear registers and jump back to caller.ltorg
+    MOVS r6, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r2, [r1, r6]  @ Garante que o clock termine em LOW
 
-    readbit : PUSH{r4, r5, lr}
+    POP {r4, r5, r6, pc}           @ Clear registers and jump back to caller
+    .ltorg
 
-              LDR r1,
-    = 0xD0000000 MOVS r2, #(1 << DOLOS_PIN_SWCLK) MOVS r3,
-    #(1 << DOLOS_PIN_SWDIO)
+readbit:
+    PUSH {r4, r5, lr}
 
-            @LOW half
-        - cycle MOVS r5,
-    #DOLOS_SIO_GPIO_OE_CLR STR r3, [ r1, r5 ] @SWDIO becomes input,
-    GPIO_OE_CLR with SWDIO mask
+    LDR r1, =0xD0000000
+    MOVS r2, #(1 << DOLOS_PIN_SWCLK)
+    MOVS r3, #(1 << DOLOS_PIN_SWDIO)
 
-        @Delay para o sinal subir.rept 59 NOP.endr
+    @ LOW half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OE_CLR
+    STR r3, [r1, r5]               @ SWDIO becomes input, GPIO_OE_CLR with SWDIO mask
 
-        @HIGH half
-        - cycle MOVS r5,
-    #DOLOS_SIO_GPIO_OUT_SET STR r2,
-    [ r1, r5 ] @SWCLK HIGH
+    @ Delay para o sinal subir 
+    .rept 59
+        NOP
+    .endr
 
-    @Pausa elétrica NOP NOP NOP NOP
+    @ HIGH half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_SET
+    STR r2, [r1, r5]               @ SWCLK HIGH
 
-    MOVS r5,
-    #DOLOS_SIO_GPIO_IN LDR r0,
-    [ r1, r5 ] @Read all pins
+    @ Pausa elétrica
+    NOP
+    NOP
+    NOP
+    NOP
 
-    LSRS r0,
-    r0,
-    #DOLOS_PIN_SWDIO @Shift SWDIO bit to position 0
+    MOVS r5, #DOLOS_SIO_GPIO_IN
+    LDR r0, [r1, r5]               @ Read all pins
 
-    MOVS r4,
-    #1 ANDS r0, r0,
-    r4 @Isolate bit
+    LSRS r0, r0, #DOLOS_PIN_SWDIO  @ Shift SWDIO bit to position 0
 
-    MOVS r5,
-    #DOLOS_SIO_GPIO_OUT_CLR STR r2,
-    [ r1, r5 ] @SWCLK LOW
+    MOVS r4, #1
+    ANDS r0, r0, r4                 @ Isolate bit
 
-        @62 -
-        4(MOVS)-2(STR)-1(LDR)-1(LSRS)-1(
-            ANDS)-4 NOPs = 49 NOPs required.rept 49 NOP
-                               .endr
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r2, [r1, r5]               @ SWCLK LOW
 
-                           POP{r4, r5, pc}
-                               .ltorg
+    @ 62 - 4(MOVS) - 2(STR) - 1(LDR) - 1(LSRS) - 1(ANDS) - 4 NOPs = 49 NOPs required
+    .rept 49
+        NOP
+    .endr
 
-                           @Turnaround->Transition period between one side stopping transmission
-                           and the other starting.@During this period,
-                    no one drives the wire.It remains at high impedance.This is necessary
-                    @to avoid electrical conflict,
-                    one side wanting HIGH and the other LOW.turnaround_host_to_target
-    : PUSH{r4, r5, lr} LDR r1,
-                    = 0xD0000000 MOVS r2, #(1 << DOLOS_PIN_SWDIO) MOVS r4,
-                    #(1 << DOLOS_PIN_SWCLK)
 
-                        MOVS r5,
-                    #DOLOS_SIO_GPIO_OE_CLR STR r2,
-                    [ r1, r5 ] @Release SWDIO — high impedance
+    POP {r4, r5, pc}
+    .ltorg
 
-                        @HIGH half
-                        - cycle MOVS r5,
-                    #DOLOS_SIO_GPIO_OUT_SET STR r4,
-                    [ r1, r5 ] @Activate SWCLK
+@ Turnaround -> Transition period between one side stopping transmission and the other starting.
+@ During this period, no one drives the wire. It remains at high impedance. This is necessary
+@ to avoid electrical conflict, one side wanting HIGH and the other LOW.
+turnaround_host_to_target:
+    PUSH {r4, r5, lr}
+    LDR r1, =0xD0000000
+    MOVS r2, #(1 << DOLOS_PIN_SWDIO)
+    MOVS r4, #(1 << DOLOS_PIN_SWCLK)
 
-                        @62 -
-                        2(MOVS)-1(STR) = 59 NOPs.rept 59 NOP.endr
+    MOVS r5, #DOLOS_SIO_GPIO_OE_CLR
+    STR r2, [r1, r5]               @ Release SWDIO — high impedance
 
-                                         @LOW half
-                                         - cycle MOVS r5,
-                    #DOLOS_SIO_GPIO_OUT_CLR STR r4,
-                    [ r1, r5 ] @Take down SWCLK
+    @ HIGH half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_SET
+    STR r4, [r1, r5]               @ Activate SWCLK
 
-                        @62 -
-                        2(MOVS)-1(STR) = 59 NOPs.rept 59 NOP
-                                             .endr
+    @ 62 - 2(MOVS) - 1(STR) = 59 NOPs
+    .rept 59
+        NOP
+    .endr
 
-                                         POP{r4, r5, pc}
-                                             .ltorg
+    @ LOW half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r4, [r1, r5]               @ Take down SWCLK
 
-                                         turnaround_target_to_host : PUSH{r4, r5, lr} LDR r1,
-                    = 0xD0000000 MOVS r2, #(1 << DOLOS_PIN_SWDIO) MOVS r4,
-                    #(1 << DOLOS_PIN_SWCLK)
+    @ 62 - 2(MOVS) - 1(STR) = 59 NOPs
+    .rept 59
+        NOP
+    .endr
 
-                            @HIGH half
-                        - cycle MOVS r5,
-                    #DOLOS_SIO_GPIO_OUT_SET STR r4,
-                    [ r1, r5 ] @Activate SWCLK
+    POP {r4, r5, pc}
+    .ltorg
 
-                        @62 -
-                        2(MOVS)-1(STR) = 59 NOPs.rept 59 NOP.endr
+turnaround_target_to_host:
+    PUSH {r4, r5, lr}
+    LDR r1, =0xD0000000
+    MOVS r2, #(1 << DOLOS_PIN_SWDIO)
+    MOVS r4, #(1 << DOLOS_PIN_SWCLK)
 
-                                         @LOW half
-                                         - cycle MOVS r5,
-                    #DOLOS_SIO_GPIO_OUT_CLR STR r4,
-                    [ r1, r5 ] @Take down SWCLK
+    @ HIGH half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_SET
+    STR r4, [r1, r5]               @ Activate SWCLK
 
-                        @62 -
-                        2(MOVS)-1(STR) = 59 NOPs.rept 59 NOP.endr
+    @ 62 - 2(MOVS) - 1(STR) = 59 NOPs
+    .rept 59
+        NOP
+    .endr
 
-                                         MOVS r5,
-                    #DOLOS_SIO_GPIO_OE_SET STR r2,
-                    [ r1, r5 ] @SWDIO assumes responsibility
+    @ LOW half-cycle
+    MOVS r5, #DOLOS_SIO_GPIO_OUT_CLR
+    STR r4, [r1, r5]               @ Take down SWCLK
 
-                    POP{r4, r5, pc}
-                        .ltorg
+    @ 62 - 2(MOVS) - 1(STR) = 59 NOPs
+    .rept 59
+        NOP
+    .endr
 
-                    line_reset : PUSH{r4, lr}
+    MOVS r5, #DOLOS_SIO_GPIO_OE_SET
+    STR r2, [r1, r5]               @ SWDIO assumes responsibility
 
-                                 MOVS r4,
-                    #50
+    POP {r4, r5, pc}
+    .ltorg
 
-    line_reset_loop : MOVS r0,
-                    #1 BL writebit @Executes the clock cycle by sending the HIGH bit through the SIO
 
-                      SUBS r4,
-                    r4,
-                    #1 BNE line_reset_loop
+line_reset:
+    PUSH {r4, lr}
 
-                      POP{r4, pc}
-                          .ltorg
+    MOVS r4, #50
+
+line_reset_loop:
+    MOVS r0, #1
+    BL writebit @ Executes the clock cycle by sending the HIGH bit through the SIO
+
+    SUBS r4, r4, #1
+    BNE line_reset_loop
+
+    POP {r4, pc}
+    .ltorg
