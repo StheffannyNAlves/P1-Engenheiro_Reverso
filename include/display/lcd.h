@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define LCD_COMMAND   0x00
+#define LCD_COMMAND 0x00
 #define LCD_CHARACTER 0x01
 
 void lcd_bus_init(void);

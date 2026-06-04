@@ -4,7 +4,6 @@
 #include "hardware/gpio.h"
 #include "platform/board_config.h"
 
-
 #define SIO_BASED 0xD0000000u
 #define GPIO_OUT_SET *(volatile uint32_t *)(SIO_BASED + 0x014)
 #define GPIO_OE_SET *(volatile uint32_t *)(SIO_BASED + 0x024)

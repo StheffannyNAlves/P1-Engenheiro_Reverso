@@ -1,9 +1,9 @@
 #include "app/app.h"
+#include "hardware/gpio.h"
+#include "platform/board_config.h"
 #include "swd/swd_phy.h"
 #include "swd/swd_proto.h"
-#include "hardware/gpio.h"
 #include "transport/usb_transport.h"
-#include "platform/board_config.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -14,10 +14,10 @@ dolos_fault_t app_enter_swd(void) {
     gpio_init(3);
 
     gpio_set_dir(2, GPIO_OUT);
-    gpio_set_dir(3, GPIO_OUT);  
+    gpio_set_dir(3, GPIO_OUT);
     gpio_put(2, 1); // SWDIO high
     gpio_put(3, 1); // SWCLK high
-    
+
     swd_phy_init(); // Ensure physical layer is initialized before entering SWD mode
     // Enter SWD mode: line_reset + 0xE79E + line_reset + idle
     // Returns: error code or success

@@ -46,7 +46,7 @@ void fsm_run() {
         board_init();
         transport_usb_init();
         target_ctrl_init();
-        
+
         // Initialize the display only once
         if (!is_lcd_ready) {
             lcd_bus_init();
@@ -64,7 +64,6 @@ void fsm_run() {
             current_state = ERROR;
             break;
         }
-
 
         // Create a non-blocking 1.5 second timer using the Pico native timer
         static absolute_time_t timeout = {0};
