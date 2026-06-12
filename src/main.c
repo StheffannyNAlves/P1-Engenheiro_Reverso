@@ -44,7 +44,7 @@ void fsm_run() {
     case PLATFORM_INIT:
         printf("PLATFORM_INIT\n");
         board_init();
-        transport_usb_init();        // printf("Estado: ENTER_SWD - Modo SWD configurado\n");
+        transport_usb_init(); // printf("Estado: ENTER_SWD - Modo SWD configurado\n");
 
         target_ctrl_init();
 
@@ -113,7 +113,7 @@ void fsm_run() {
         app_enter_swd();
         target_reset_high();
         sleep_ms(2);
-       
+
         // printf("Estado: ENTER_SWD - Modo SWD configurado\n");
         transport_send_event((const uint8_t *)"DBG:SWD_MODE\r\n", 14);
         current_state = READ_IDCODE;
@@ -155,7 +155,7 @@ void fsm_run() {
         // 2. FASE ESTÁTICA DO CARACTERE: Segura a tela travada por 3 segundos inteiros
         for (int i = 0; i < 3000; i += 10) {
             transport_usb_task(); // Mantém o USB respondendo ao Python durante os 3 segundos
-            sleep_ms(10);        
+            sleep_ms(10);
         }
 
         // 3. FASE PISCA-PISCA INFINITA: Começa a piscar o alerta de 500ms em 500ms
@@ -176,8 +176,6 @@ void fsm_run() {
                 sleep_ms(10);
             }
         }
-        
-
 
     case WATCHDOG_RESET:
         // printf("Estado: WATCHDOG_RESET\n");

@@ -26,12 +26,11 @@ void swd_enter_swd_mode(void) {
     writebit(0); // Idle cycle 2
 
     // 4. Seleção imediata do Core 0
-    swd_write_targetsel(0x01002927); 
-    
+    swd_write_targetsel(0x01002927);
+
     writebit(0); // Idle cycle após TARGETSEL
     writebit(0);
 }
-
 
 static uint8_t calculate_parity(uint32_t apndp, uint8_t rnw, uint8_t a2, uint8_t a3) {
     uint8_t count = (apndp & 1) + (rnw & 1) + (a2 & 1) + (a3 & 1);
@@ -70,7 +69,7 @@ static uint32_t read_data(void) {
     return data;
 }
 
-static void write_data(uint32_t data){
+static void write_data(uint32_t data) {
     for (int i = 0; i < 32; i++) {
         writebit((data >> i) & 1);
     }
@@ -107,7 +106,7 @@ uint32_t swd_read(uint8_t apndp, uint8_t addr, uint8_t rnw) {
     }
     char ack_msg[32];
     snprintf(ack_msg, sizeof(ack_msg), "ACK=%u\r\n", ack);
-    transport_send_event((uint8_t*)ack_msg, strlen(ack_msg));
+    transport_send_event((uint8_t *)ack_msg, strlen(ack_msg));
     if (ack == 0b001) { // ACK OK
         uint32_t data = read_data();
         uint8_t parity = readbit();
@@ -134,7 +133,7 @@ uint32_t swd_read_idcode(void) {
     return swd_read(0, 0, 1); // APnDP = 0 (DP), addr = 0 (IDCODE), RnW = 1 (read)
 }
 
-uint8_t swd_write(uint8_t apndp, uint8_t a2, uint8_t a3, uint32_t data_to_write) {    
+uint8_t swd_write(uint8_t apndp, uint8_t a2, uint8_t a3, uint32_t data_to_write) {
     send_request(apndp, 0, a2, a3);
     turnaround_host_to_target();
     uint8_t ack = 0;
@@ -142,12 +141,12 @@ uint8_t swd_write(uint8_t apndp, uint8_t a2, uint8_t a3, uint32_t data_to_write)
         ack |= (readbit() << i);
     }
 
-    if (ack == 0b001){
+    if (ack == 0b001) {
         turnaround_target_to_host();
 
         write_data(data_to_write);
         writebit(calculate_data_parity(data_to_write));
-        
+
         return ack;
     }
 
@@ -177,8 +176,6 @@ void swd_write_targetsel(uint32_t target_id) {
     writebit(calculate_data_parity(target_id));
 }
 
-
-
 /**
  * @brief Tira o alvo do estado Dormant e força para o modo SWD.
  * Sequência corrigida e cravada nos 4 bits de ativação do padrão ARM CoreSight.
@@ -191,11 +188,9 @@ void swd_wake_dormant(void) {
 
     // 2. Selection Alert Sequence (128 bits - Chave de Hardware)
     // Transmitido LSB-first.
-    static const uint8_t alert_seq[16] = {
-        0x92, 0xf3, 0x09, 0x62, 0x95, 0x2d, 0x85, 0x86,
-        0xe9, 0xaf, 0xdd, 0xe3, 0xa2, 0x0e, 0xbc, 0x19
-    };
-    
+    static const uint8_t alert_seq[16] = {0x92, 0xf3, 0x09, 0x62, 0x95, 0x2d, 0x85, 0x86,
+                                          0xe9, 0xaf, 0xdd, 0xe3, 0xa2, 0x0e, 0xbc, 0x19};
+
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 8; j++) {
             writebit((alert_seq[i] >> j) & 1);
