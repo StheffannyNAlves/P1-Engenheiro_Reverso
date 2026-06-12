@@ -154,7 +154,7 @@ A sonda opera sob um modelo de **Safe-Read forçado por software**. Após o hand
 | Sinal | GPIO Sonda | Componente | Pino Alvo | Função |
 | :------ | :---------- | :----------- | :---------- | :------- |
 | SWCLK | `GP2` | Cabo JST SH 1.00mm | `SWCLK` | Clock SWD —> sempre saída |
-| SWDIO | `GP3` | Resistor **330 Ω** série | `SWDIO` | Dados bidirecionais |
+| SWDIO | `GP3` | Cabo JST SH 1.00mm + Resistor **330 Ω** série | `SWDIO` | Dados bidirecionais |
 | RESET | `GP22` | Resistor **1 kΩ** série | `RUN` (pino 30) | Kill switch |
 | GND | `GND` | Cabo JST SH 1.00mm | `GND` | Referência comum —> obrigatório |
 
