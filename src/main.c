@@ -42,9 +42,10 @@ void fsm_run() {
         break;
 
     case PLATFORM_INIT:
-        printf("Estado: PLATFORM_INIT\n");
+        printf("PLATFORM_INIT\n");
         board_init();
-        transport_usb_init();
+        transport_usb_init();        // printf("Estado: ENTER_SWD - Modo SWD configurado\n");
+
         target_ctrl_init();
 
         // Initialize the display only once
@@ -54,13 +55,13 @@ void fsm_run() {
             is_lcd_ready = true;
 
             // Push the initial text to the screen
-            lcd_set_state("PLATFORM_INIT");
-            lcd_set_error("Iniciando...");
+            lcd_set_state("SWD PROBE v1.0");
+            lcd_set_error("SYS: BOOTING...");
         }
         // Call initialization only ONCE to avoid pointer corruption
         if (!platform_init()) {
             lcd_set_state("CRITICAL ERROR");
-            lcd_set_error("Platform Fail");
+            lcd_set_error("PLATFORM FAIL");
             current_state = ERROR;
             break;
         }
@@ -84,8 +85,8 @@ void fsm_run() {
 
     case IDLE:
         // printf("Estado: IDLE\n");
-        lcd_set_state("STATUS: IDLE");
-        lcd_set_error("Aguardando Host");
+        lcd_set_state("[ IDLE STATE ]  ");
+        lcd_set_error("AWAITING HOST...");
         transport_command_t cmd = transport_process_command();
         // printf("Comando recebido: %d\n", cmd);
         if (cmd == CMD_START_SESSION) {
@@ -96,21 +97,23 @@ void fsm_run() {
     case TARGET_HOLD_RESET:
         // printf("Estado: TARGET_HOLD_RESET\n");
         target_reset_low();
-
-        lcd_set_state("TARGET RESET");
-        lcd_set_error("Holding LOW...");
+        sleep_ms(10);
+        lcd_set_state("[ TARGET RST ]");
+        lcd_set_error("ASSERTING LOW...");
 
         current_state = ENTER_SWD;
         break;
 
     case ENTER_SWD:
         // printf("Estado: ENTER_SWD - Iniciando\n");
-        lcd_set_state("ENTER_SWD");
-        lcd_set_error("Configurando...");
+        lcd_set_state("[ LINK CONFIG ]");
+        lcd_set_error("TX: JTAG -> SWD");
 
         transport_send_event((const uint8_t *)"DBG:ENTER_SWD\r\n", 15);
         app_enter_swd();
-
+        target_reset_high();
+        sleep_ms(2);
+       
         // printf("Estado: ENTER_SWD - Modo SWD configurado\n");
         transport_send_event((const uint8_t *)"DBG:SWD_MODE\r\n", 14);
         current_state = READ_IDCODE;
@@ -119,8 +122,8 @@ void fsm_run() {
 
     case READ_IDCODE:
         // printf("Estado: READ_IDCODE\n");
-        lcd_set_state("READ_IDCODE");
-        lcd_set_error("Lendo IDCODE...");
+        lcd_set_state("[ DPIDR READ ]");
+        lcd_set_error("REQ CORE ID...");
 
         uint32_t idcode = swd_read_idcode();
         // printf("IDCODE lido: %08lX\n", idcode);
@@ -130,59 +133,56 @@ void fsm_run() {
         transport_send_event((const uint8_t *)msg, strlen(msg));
         if (idcode != 0x0BC12477) {
             transport_send_event((const uint8_t *)"DBG:IDCODE_FAIL\r\n", 21);
-            lcd_set_state("IDCODE FALHOU");
+            lcd_set_state("SWD FAULT");
             lcd_set_error(id_str);
             current_state = ERROR;
         } else {
             transport_send_event((const uint8_t *)"DBG:IDCODE_OK\r\n", 17);
             lcd_set_state("IDCODE OK");
             lcd_set_error(id_str);
+            sleep_ms(1500);
             current_state = IDLE;
         }
         break;
 
     case ERROR:
-        // Keep the printf so your Python script knows about the critical error
-        static bool error_logged = false;
-        if (!error_logged) {
-            printf("Estado: ERROR\n");
-            error_logged = true;
+        printf("Estado: ERROR\n");
+
+        // 1. Mostra o erro com o caractere customizado imediatamente
+        lcd_set_state("\001 ERROR \001");
+        lcd_set_error("BUS UNRESPONSIVE");
+
+        // 2. FASE ESTÁTICA DO CARACTERE: Segura a tela travada por 3 segundos inteiros
+        for (int i = 0; i < 3000; i += 10) {
+            transport_usb_task(); // Mantém o USB respondendo ao Python durante os 3 segundos
+            sleep_ms(10);        
         }
 
-        // Static variables to control blink timing and the current display state
-        static absolute_time_t blink_timeout = {0};
-        static bool display_visible = true;
+        // 3. FASE PISCA-PISCA INFINITA: Começa a piscar o alerta de 500ms em 500ms
+        bool tela_acesa = true;
+        while (1) {
+            tela_acesa = !tela_acesa;
 
-        // Initialize the timer if it is zero
-        if (to_us_since_boot(blink_timeout) == 0) {
-            blink_timeout = make_timeout_time_ms(500); // Pisca a cada 500ms
-        }
-
-        // When the 500ms interval expires, toggle the LCD display
-        if (get_absolute_time() >= blink_timeout) {
-            display_visible = !display_visible;
-
-            if (display_visible) {
-
-                lcd_set_state("\x00  !!! ERRO !!!  \x00");
-                lcd_set_error("Sistema Parado");
+            if (tela_acesa) {
+                lcd_set_state("\001  !!!SYSTEM HAULT!!!  \001");
+                lcd_set_error("BUS UNRESPONSIVE");
             } else {
-                lcd_set_state("");
+                lcd_set_state(""); // Apaga a linha de cima para dar o efeito de pisca
             }
 
-            blink_timeout = make_timeout_time_ms(500);
+            // Segura o estado do pisca por 500ms mantendo o USB vivo
+            for (int j = 0; j < 500; j += 10) {
+                transport_usb_task(); // O script nunca vai cair por timeout
+                sleep_ms(10);
+            }
         }
+        
 
-        // IMPORTANT: We removed the "while(1)" that was originally here!
-        // Now the switch simply executes this block very quickly,
-        // exits the FSM, and allows main()'s transport_usb_task() to keep
-        // running USB continuously for recovery commands.
-        break;
 
     case WATCHDOG_RESET:
         // printf("Estado: WATCHDOG_RESET\n");
         lcd_set_state("WATCHDOG RESET");
-        lcd_set_error("Recuperando...");
+        lcd_set_error("RECOVERING...");
         transport_set_watchdog_flag();
         current_state = PLATFORM_INIT;
         break;

@@ -15,8 +15,8 @@ dolos_fault_t app_enter_swd(void) {
 
     gpio_set_dir(2, GPIO_OUT);
     gpio_set_dir(3, GPIO_OUT);
-    gpio_put(2, 1); // SWDIO high
-    gpio_put(3, 1); // SWCLK high
+    gpio_put(2, 1); // SWCLK high
+    gpio_put(3, 1); // SWDIO high
 
     swd_phy_init(); // Ensure physical layer is initialized before entering SWD mode
     // Enter SWD mode: line_reset + 0xE79E + line_reset + idle

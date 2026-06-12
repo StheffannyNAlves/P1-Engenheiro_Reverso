@@ -2,8 +2,7 @@
 #ifndef TARGET_CTRL_H
 #define TARGET_CTRL_H
 
-#define PIN_RUN 22u
-#define PIN_RST 14u
+#define PIN_RST 22u
 
 void target_ctrl_init(void);
 void target_reset_low(void);
